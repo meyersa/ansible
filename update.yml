@@ -1,16 +1,16 @@
+# https://docs.ansible.com/ansible/latest/collections/ansible/builtin/apt_module.html#ansible-collections-ansible-builtin-apt-module
+
 tasks:
+- name: Update all packages to their latest version
+  ansible.builtin.apt:
+    name: "*"
+    state: latest
 
-  # https://docs.ansible.com/ansible/latest/collections/ansible/builtin/apt_module.html#ansible-collections-ansible-builtin-apt-module
-  - name: Update all packages to their latest version
-    ansible.builtin.apt:
-      name: "*"
-      state: latest
+- name: Upgrade the OS (apt-get dist-upgrade)
+  ansible.builtin.apt:
+    upgrade: dist
 
-  - name: Upgrade the OS (apt-get dist-upgrade)
-    ansible.builtin.apt:
-      upgrade: dist
-
-  - name: Remove dependencies that are no longer required and purge their configuration files
-    ansible.builtin.apt:
-      autoremove: yes
-      purge: true
+- name: Remove dependencies that are no longer required and purge their configuration files
+  ansible.builtin.apt:
+    autoremove: yes
+    purge: true
