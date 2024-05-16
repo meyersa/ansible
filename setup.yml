@@ -4,18 +4,12 @@
     created_username: ansible
 
   tasks:
-    - name: Setup passwordless sudo
-      lineinfile:
-        path: /etc/sudoers
-        state: present
-        regexp: '^%sudo'
-        line: '%sudo ALL=(ALL) NOPASSWD: ALL'
-        validate: '/usr/sbin/visudo -cf %s' 
 
-    - name: Create a new regular user with sudo privileges
-      user:
-        name: "{{ created_username }}"
-        state: present
-        groups: sudo
-        append: true
-        create_home: true
+    - name: Update apt and install required system packages
+      apt:
+        pkg:
+          - git
+          - dnsutil
+          - netutil
+        state: latest
+        update_cache: true
