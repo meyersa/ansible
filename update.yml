@@ -1,8 +1,9 @@
 # https://docs.ansible.com/ansible/latest/collections/ansible/builtin/apt_module.html#ansible-collections-ansible-builtin-apt-module
 - hosts: local
+  become: true
   tasks:
   - name: Update all packages to their latest version
-    ansible.builtin.apt:
+    ansible.builtin.apt:  
       name: "*"
       state: latest
 
