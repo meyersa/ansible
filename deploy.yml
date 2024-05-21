@@ -14,7 +14,7 @@
     - import_tasks: tasks/timezone.yml    
 
     # Configure UFW
-    - import_tasks: tasks/ufw_basic.yml
+    - import_tasks: tasks/ufw-basic.yml
 
     # Install Docker
     - import_tasks: tasks/docker.yml
