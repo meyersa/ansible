@@ -18,7 +18,6 @@
 
     # Install Docker
     - import_tasks: tasks/docker.yml
-      when: "'docker' in group_names"
 
     # Reboot Host
     # - import_tasks: tasks/reboot.yml
