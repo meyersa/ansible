@@ -3,4 +3,22 @@
   hosts: all
   become: true
   tasks: 
+
+    # Update host
     - import_tasks: tasks/update.yml    
+
+    # Install Packages
+    - import_tasks: tasks/apt.yml    
+
+    # Set TimeZone
+    - import_tasks: tasks/timezone.yml    
+
+    # Configure UFW
+    - import_tasks: tasks/ufw_basic.yml
+
+    # Install Docker
+    - import_tasks: tasks/docker.yml
+      when: "'docker' in group_names"
+
+    # Reboot Host
+    # - import_tasks: tasks/reboot.yml
