@@ -1,8 +1,0 @@
----
-- hosts: local
-  become: true
-  tasks:
-  - name: Reboot
-    ansible.builtin.reboot:
-      reboot_timeout: 3600
-      msg: Rebooting per Ansible
