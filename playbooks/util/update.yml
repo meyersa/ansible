@@ -1,4 +1,5 @@
 # https://docs.ansible.com/ansible/latest/collections/ansible/builtin/apt_module.html#ansible-collections-ansible-builtin-apt-module
+---
 - hosts: local
   become: true
   tasks:
