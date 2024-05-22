@@ -3,13 +3,46 @@
 - name: Install Crowdsec Bouncer
   tags: ["crowdsec"]
   block:
-    - name: Update and upgrade all packages to the latest version
-      ansible.builtin.apt:
-        update_cache: true
-        upgrade: dist
-        cache_valid_time: 3600
+    - name: Download the crowdsec-firewall-bouncer.yaml file
+      get_url:
+        url: https://raw.githubusercontent.com/meyersa/ansible/main/config/crowdsec/crowdsec-firewall-bouncer.yaml
+        dest: /etc/crowdsec/bouncers/crowdsec-firewall-bouncer.yaml
 
-    - name: Install required packages
+    - name: Set Crowdsec API Url
+      ansible.builtin.lineinfile:
+        path: /etc/crowdsec/bouncers/crowdsec-firewall-bouncer.yaml
+        regexp: '^api_url:'
+        line: "api_url:{{ API_URL }}"
+
+    - name: Set Crowdsec API Key
+      ansible.builtin.lineinfile:
+        path: /etc/crowdsec/bouncers/crowdsec-firewall-bouncer.yaml
+        regexp: '^api_key:'
+        line: "api_key:{{ API_KEY }}"
+
+    - name: Add Crowdsec's official GPG key
+      ansible.builtin.apt_key:
+        url: https://packagecloud.io/crowdsec/crowdsec/gpgkey
+        keyring: /etc/apt/keyrings/crowdsec_crowdsec-archive-keyring.gpg
+        state: present
+
+    - name: Add Crowdsec repository
+      ansible.builtin.apt_repository:
+        repo: >-
+          deb [signed-by=/etc/apt/keyrings/crowdsec_crowdsec-archive-keyring.gpg] https://packagecloud.io/crowdsec/crowdsec/any/ any main
+          deb-src [signed-by=/etc/apt/keyrings/crowdsec_crowdsec-archive-keyring.gpg] https://packagecloud.io/crowdsec/crowdsec/any/ any main
+        filename: crowdsec
+        state: present
+
+    - name: Install Crowdsec and related packages
       ansible.builtin.apt:
-        pkg:
+        name:
           - crowdsec-firewall-bouncer-iptables
+        state: present
+        update_cache: true
+
+    - name: Enable and start Crowdsec
+      ansible.builtin.systemd:
+        name: crowdsec-firewall-bouncer.service
+        enabled: true
+        state: started

@@ -23,5 +23,6 @@
           - ca-certificates
           - gnupg
           - software-properties-common
+          - debian-archive-keyring
         state: latest
         update_cache: true

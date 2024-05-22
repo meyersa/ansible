@@ -1,0 +1,16 @@
+mode: iptables
+pid_dir: /var/run/
+update_frequency: 10s
+daemonize: false
+log_mode: stdout
+log_level: info
+log_max_size: 1000
+api_url:
+api_key:
+deny_action: DROP
+deny_log: false
+supported_decisions_types:
+  - ban
+blacklists_ipv4: crowdsec-blacklists
+iptables_chains:
+ - INPUT

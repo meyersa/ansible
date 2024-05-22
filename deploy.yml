@@ -9,12 +9,23 @@
     # Install Packages
     - import_tasks: tasks/deploy/apt.yml
 
+    # Create Keyring
+    - name: Create directory for GPG keys
+      tags: ["keyring"]
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: "0755"
+
     # Set TimeZone
     - import_tasks: tasks/deploy/timezone.yml
 
     # Configure UFW
     - import_tasks: tasks/deploy/ufw-basic.yml
 
+    # Install Crowdsec
+    - import_tasks: tasks/deploy/crowdsec.yml
+    
     # Install Docker
     - import_tasks: tasks/deploy/docker.yml
 

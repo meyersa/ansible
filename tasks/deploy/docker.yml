@@ -2,12 +2,6 @@
 - name: Install Docker
   tags: ["docker"]
   block:
-    - name: Create directory for Docker's GPG key
-      ansible.builtin.file:
-        path: /etc/apt/keyrings
-        state: directory
-        mode: "0755"
-
     - name: Add Docker's official GPG key
       ansible.builtin.apt_key:
         url: https://download.docker.com/linux/ubuntu/gpg
