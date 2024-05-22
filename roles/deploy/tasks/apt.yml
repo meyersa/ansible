@@ -24,7 +24,5 @@
           - gnupg
           - software-properties-common
           - debian-archive-keyring
-          - boto3
-          - botocore
         state: latest
         update_cache: true
