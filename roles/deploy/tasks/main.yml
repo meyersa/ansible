@@ -24,7 +24,7 @@
 - import_tasks: docker.yml
 
 # Reboot Host
-- import_tasks: ../../reboot.yml
+- import_tasks: ../../util/reboot.yml
 
 - name: Send a message to the Discord channel
   community.general.discord:
