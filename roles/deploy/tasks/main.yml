@@ -1,10 +1,9 @@
 # Update host
-- import_tasks: update.yml
+- import_tasks: ../../util/update.yml
 
 # Install Packages
 - import_tasks: apt.yml
 
-# Create Keyring
 - name: Create directory for GPG keys
   tags: ["keyring"]
   ansible.builtin.file:
@@ -25,9 +24,8 @@
 - import_tasks: docker.yml
 
 # Reboot Host
-- import_tasks: reboot.yml
+- import_tasks: ../../reboot.yml
 
-# Send confirmation message
 - name: Send a message to the Discord channel
   community.general.discord:
     webhook_id: "{{ DEPLOY_WEBHOOK_ID }}"

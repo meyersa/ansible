@@ -1,5 +1,5 @@
 ---
-- name: Common Deployment
+- name: Common Deployment Playbook
   hosts: all
   become: true
   roles: 
