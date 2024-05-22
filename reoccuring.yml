@@ -1,0 +1,20 @@
+---
+- name: Reoccuring Playbook
+  hosts: all
+  become: true
+  tasks:
+    # Update host
+    - import_tasks: tasks/util/update.yml
+
+    # Backup host
+    - import_tasks: tasks/reoccuring/backup.yml
+
+    # Reboot Host
+    - import_tasks: tasks/util/reboot.yml
+
+    # Send confirmation message
+    - name: Send a message to the Discord channel
+      community.general.discord:
+        webhook_id: "{{ DEPLOY_WEBHOOK_ID }}"
+        webhook_token: "{{ DEPLOY_WEBHOOK_TOKEN }}"
+        content: "Host {{ inventory_hostname }} has passed weekly checkin"
