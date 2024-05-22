@@ -3,22 +3,10 @@
 - name: Install Crowdsec Bouncer
   tags: ["crowdsec"]
   block:
-    - name: Download the crowdsec-firewall-bouncer.yaml file
-      get_url:
-        url: https://raw.githubusercontent.com/meyersa/ansible/main/config/crowdsec/crowdsec-firewall-bouncer.yaml
+    - name: Configure Crowdsec
+      ansible.builtin.template:
+        src: config.j2
         dest: /etc/crowdsec/bouncers/crowdsec-firewall-bouncer.yaml
-
-    - name: Set Crowdsec API Url
-      ansible.builtin.lineinfile:
-        path: /etc/crowdsec/bouncers/crowdsec-firewall-bouncer.yaml
-        regexp: '^api_url:'
-        line: "api_url: {{ API_URL }}"
-
-    - name: Set Crowdsec API Key
-      ansible.builtin.lineinfile:
-        path: /etc/crowdsec/bouncers/crowdsec-firewall-bouncer.yaml
-        regexp: '^api_key:'
-        line: "api_key: {{ API_KEY }}"
 
     - name: Add Crowdsec's official GPG key
       ansible.builtin.apt_key:

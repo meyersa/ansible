@@ -1,0 +1,35 @@
+# Update host
+- import_tasks: update.yml
+
+# Install Packages
+- import_tasks: apt.yml
+
+# Create Keyring
+- name: Create directory for GPG keys
+  tags: ["keyring"]
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: "0755"
+
+# Set TimeZone
+- import_tasks: timezone.yml
+
+# Configure UFW
+- import_tasks: ufw-basic.yml
+
+# Install Crowdsec
+- import_tasks: crowdsec.yml
+
+# Install Docker
+- import_tasks: docker.yml
+
+# Reboot Host
+- import_tasks: reboot.yml
+
+# Send confirmation message
+- name: Send a message to the Discord channel
+  community.general.discord:
+    webhook_id: "{{ DEPLOY_WEBHOOK_ID }}"
+    webhook_token: "{{ DEPLOY_WEBHOOK_TOKEN }}"
+    content: "Host {{ inventory_hostname }} has been deployed"

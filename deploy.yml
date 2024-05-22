@@ -1,40 +1,6 @@
 ---
-- name: Deploy Playbook
+- name: Common Deployment
   hosts: all
   become: true
-  tasks:
-    # Update host
-    - import_tasks: tasks/util/update.yml
-
-    # Install Packages
-    - import_tasks: tasks/deploy/apt.yml
-
-    # Create Keyring
-    - name: Create directory for GPG keys
-      tags: ["keyring"]
-      ansible.builtin.file:
-        path: /etc/apt/keyrings
-        state: directory
-        mode: "0755"
-
-    # Set TimeZone
-    - import_tasks: tasks/deploy/timezone.yml
-
-    # Configure UFW
-    - import_tasks: tasks/deploy/ufw-basic.yml
-
-    # Install Crowdsec
-    - import_tasks: tasks/deploy/crowdsec.yml
-    
-    # Install Docker
-    - import_tasks: tasks/deploy/docker.yml
-
-    # Reboot Host
-    - import_tasks: tasks/util/reboot.yml
-
-    # Send confirmation message
-    - name: Send a message to the Discord channel
-      community.general.discord:
-        webhook_id: "{{ DEPLOY_WEBHOOK_ID }}"
-        webhook_token: "{{ DEPLOY_WEBHOOK_TOKEN }}"
-        content: "Host {{ inventory_hostname }} has been deployed"
+  roles: 
+    - deploy
