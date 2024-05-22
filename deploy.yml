@@ -2,22 +2,28 @@
 - name: Deploy Playbook
   hosts: all
   become: true
-  tasks: 
-
+  tasks:
     # Update host
-    - import_tasks: tasks/update.yml    
+    - import_tasks: tasks/util/update.yml
 
     # Install Packages
-    - import_tasks: tasks/apt.yml    
+    - import_tasks: tasks/deploy/apt.yml
 
     # Set TimeZone
-    - import_tasks: tasks/timezone.yml    
+    - import_tasks: tasks/deploy/timezone.yml
 
     # Configure UFW
-    - import_tasks: tasks/ufw-basic.yml
+    - import_tasks: tasks/deploy/ufw-basic.yml
 
     # Install Docker
-    - import_tasks: tasks/docker.yml
+    - import_tasks: tasks/deploy/docker.yml
 
     # Reboot Host
-    # - import_tasks: tasks/reboot.yml
+    - import_tasks: tasks/util/reboot.yml
+
+    # Send confirmation message
+    - name: Send a message to the Discord channel
+      community.general.discord:
+        webhook_id: "{{ DEPLOY_WEBHOOK_ID }}"
+        webhook_token: "{{ DEPLOY_WEBHOOK_TOKEN }}"
+        content: "Host {{ inventory_hostname }} has been deployed"

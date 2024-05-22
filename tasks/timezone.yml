@@ -1,8 +1,0 @@
-#TODO: Optionally set NTP server?
----
-- name: Configure Timezone
-  tags: ['timezone']
-  block:
-  - name: Set the timezone to America/Detroit
-    timezone:
-      name: America/Detroit

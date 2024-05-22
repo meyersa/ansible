@@ -1,0 +1,8 @@
+---
+- name: Reboot host
+  tags: ["reboot"]
+  block:
+    - name: Reboot
+      ansible.builtin.reboot:
+        reboot_timeout: 3600
+        msg: Rebooting per Ansible
