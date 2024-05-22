@@ -5,6 +5,11 @@
     - name: Update apt and install required system packages
       apt:
         pkg:
+          - ufw
+          - cpp
+          - cmake
+          - clang
+          - python3
           - git
           - dnsutils
           - net-tools
