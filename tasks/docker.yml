@@ -64,10 +64,16 @@
         groups: docker
         append: true
 
-    - name: Enable and start Docker services
+    - name: Enable and start containerd
+      ansible.builtin.systemd:
+        name:
+          - containerd.service
+        enabled: true
+        state: started
+
+    - name: Enable and start Docker
       ansible.builtin.systemd:
         name:
           - docker.service
-          - containerd.service
         enabled: true
         state: started
