@@ -12,13 +12,13 @@
       ansible.builtin.lineinfile:
         path: /etc/crowdsec/bouncers/crowdsec-firewall-bouncer.yaml
         regexp: '^api_url:'
-        line: "api_url:{{ API_URL }}"
+        line: "api_url: {{ API_URL }}"
 
     - name: Set Crowdsec API Key
       ansible.builtin.lineinfile:
         path: /etc/crowdsec/bouncers/crowdsec-firewall-bouncer.yaml
         regexp: '^api_key:'
-        line: "api_key:{{ API_KEY }}"
+        line: "api_key: {{ API_KEY }}"
 
     - name: Add Crowdsec's official GPG key
       ansible.builtin.apt_key:
