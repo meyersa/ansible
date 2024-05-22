@@ -14,14 +14,14 @@
         keyring: /etc/apt/keyrings/docker.gpg
         state: present
 
-    - name: Print architecture variables
-      ansible.builtin.debug:
-        msg: "Architecture: {{ ansible_architecture }}, Codename: {{ ansible_lsb.codename }}"
+    - name: Get DEB architecture
+      shell: dpkg --print-architecture
+      register: deb_architecture
 
     - name: Add Docker repository
       ansible.builtin.apt_repository:
         repo: >-
-          deb [arch={{ arch_mapping[ansible_architecture] | default(ansible_architecture) }}
+          deb [arch={{ deb_architecture.stdout }}
           signed-by=/etc/apt/keyrings/docker.gpg]
           https://download.docker.com/linux/ubuntu {{ ansible_lsb.codename }} stable
         filename: docker
