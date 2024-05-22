@@ -12,6 +12,9 @@
     # Reboot Host
     - import_tasks: tasks/util/reboot.yml
 
+    # JournalCTL Clean 
+    - name: Run JournalCTL Vacuum
+
     # Send confirmation message
     - name: Send a message to the Discord channel
       community.general.discord:
