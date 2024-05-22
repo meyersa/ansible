@@ -5,7 +5,7 @@
   block:
     - name: Configure Crowdsec
       ansible.builtin.template:
-        src: config.j2
+        src: crowdsec-firewall-bouncer.j2
         dest: /etc/crowdsec/bouncers/crowdsec-firewall-bouncer.yaml
 
     - name: Add Crowdsec's official GPG key
