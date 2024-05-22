@@ -2,7 +2,7 @@
 - import_tasks: ../../util/update.yml
 
 # Backup host
-- import_tasks: tasks/reoccuring/backup.yml
+- import_tasks: backup.yml
 
 - name: Run JournalCTL Vacuum
   ansible.builtin.command: journalctl --vacuum-size 10M

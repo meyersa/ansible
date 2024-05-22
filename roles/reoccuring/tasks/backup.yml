@@ -1,6 +1,7 @@
 # TODO: Update to pull directory as list and loop
 # TODO: Push backup to s3 
 # TODO: Only keep 3 most recent backups on system
+# TODO: Def not working lol
 ---
 - name: Backup '/srv' directory
   tags: ["timezone"]
