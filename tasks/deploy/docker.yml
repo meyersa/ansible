@@ -43,9 +43,15 @@
         name: docker
         state: present
 
-    - name: Add user to Docker group
+    - name: Add ansible to Docker group
       ansible.builtin.user:
         name: "{{ ansible_user }}"
+        groups: docker
+        append: true
+
+    - name: Add generic user to Docker group
+      ansible.builtin.user:
+        name: "{{ DEPLOY_USER }}"
         groups: docker
         append: true
 
