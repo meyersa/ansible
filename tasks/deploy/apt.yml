@@ -2,8 +2,8 @@
 - name: Install Apt Packages
   tags: ["apt"]
   block:
-    - name: Update apt and install required system packages
-      apt:
+    - name: Install required system packages
+      ansible.builtin.apt:
         pkg:
           - ufw
           - cpp
@@ -20,5 +20,9 @@
           - unzip
           - nodejs
           - npm
+          - apt-transport-https
+          - ca-certificates
+          - gnupg
+          - software-properties-common
         state: latest
         update_cache: true

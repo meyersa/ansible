@@ -2,21 +2,6 @@
 - name: Install Docker
   tags: ["docker"]
   block:
-    - name: Update and upgrade all packages to the latest version
-      ansible.builtin.apt:
-        update_cache: true
-        upgrade: dist
-        cache_valid_time: 3600
-
-    - name: Install required packages
-      ansible.builtin.apt:
-        pkg:
-          - apt-transport-https
-          - ca-certificates
-          - curl
-          - gnupg
-          - software-properties-common
-
     - name: Create directory for Docker's GPG key
       ansible.builtin.file:
         path: /etc/apt/keyrings
