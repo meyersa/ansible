@@ -26,6 +26,7 @@
       register: github_keys
 
     - name: Ensure authorized_keys file exists
+      become_user: root
       file:
         path: "/home/{{ DEPLOY_USER }}/.ssh/authorized_keys"
         state: touch
@@ -34,6 +35,7 @@
         mode: "0600"
 
     - name: Add GitHub public keys to authorized_keys
+      become_user: root
       lineinfile:
         path: "/home/{{ DEPLOY_USER }}/.ssh/authorized_keys"
         line: "{{ item.key }}"
