@@ -60,9 +60,9 @@
         owner: "{{ DEPLOY_ANSIBLE_USER }}"
         group: "{{ DEPLOY_ANSIBLE_USER }}"
         mode: "0600"
-      notify: restart ssh
 
     - name: Disable passwordless SSH authentication
+      become_user: root
       lineinfile:
         path: /etc/ssh/sshd_config
         regexp: '^#?PasswordAuthentication\s+yes'
