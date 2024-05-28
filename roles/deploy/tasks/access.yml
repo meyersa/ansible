@@ -3,6 +3,7 @@
   tags: ["access"]
   block:
     - name: Create an administrative user
+      become_user: root
       user:
         name: "{{ DEPLOY_USER }}"
         comment: "Administrative User"
@@ -10,6 +11,7 @@
         create_home: yes
 
     - name: Create .ssh directory
+      become_user: root
       file:
         path: "/home/{{ DEPLOY_USER }}/.ssh"
         state: directory
@@ -51,9 +53,9 @@
     - name: Sync Ansible_user authorized keys
       get_url:
         url: "https://raw.githubusercontent.com/meyersa/ansible/main/ansible.pub"
-        dest: "/home/{{ ansible_user_id }}/.ssh/authorized_keys"
-        owner: "{{ ansible_user_id }}"
-        group: "{{ ansible_user_id }}"
+        dest: "/home/{{ DEPLOY_ANSIBLE_USER }}/.ssh/authorized_keys"
+        owner: "{{ DEPLOY_ANSIBLE_USER }}"
+        group: "{{ DEPLOY_ANSIBLE_USER }}"
         mode: "0600"
       notify: restart ssh
 
