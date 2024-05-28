@@ -3,7 +3,6 @@
   tags: ["access"]
   block:
     - name: Create an administrative user
-      become_user: root
       user:
         name: "{{ DEPLOY_USER }}"
         shell: /bin/bash
@@ -12,7 +11,6 @@
         create_home: yes
 
     - name: Create .ssh directory
-      become_user: root
       file:
         path: "/home/{{ DEPLOY_USER }}/.ssh"
         state: directory
@@ -27,7 +25,6 @@
       register: github_keys
 
     - name: Ensure authorized_keys file exists
-      become_user: root
       file:
         path: "/home/{{ DEPLOY_USER }}/.ssh/authorized_keys"
         state: touch
@@ -36,7 +33,6 @@
         mode: "0600"
 
     - name: Add GitHub public keys to authorized_keys
-      become_user: root
       lineinfile:
         path: "/home/{{ DEPLOY_USER }}/.ssh/authorized_keys"
         line: "{{ item.key }}"
@@ -48,7 +44,6 @@
       loop: "{{ github_keys.json }}"
 
     - name: Ensure sudoers file for admin user
-      become_user: root
       copy:
         dest: "/etc/sudoers.d/{{ DEPLOY_USER }}"
         content: "{{ DEPLOY_USER }} ALL=(ALL) NOPASSWD:ALL"
@@ -63,7 +58,6 @@
         mode: "0600"
 
     - name: Disable passwordless SSH authentication
-      become_user: root
       lineinfile:
         path: /etc/ssh/sshd_config
         regexp: '^#?PasswordAuthentication\s+yes'
