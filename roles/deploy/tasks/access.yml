@@ -6,6 +6,7 @@
       become_user: root
       user:
         name: "{{ DEPLOY_USER }}"
+        shell: /bin/bash
         comment: "Administrative User"
         groups: sudo
         create_home: yes
