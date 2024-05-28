@@ -1,0 +1,50 @@
+---
+- name: Configure Admin User
+  tags: ["user"]
+  block:
+    - name: Create an administrative user
+      user:
+        name: "{{ DEPLOY_USER }}"
+        comment: "Administrative User"
+        shell: /bin/bash
+        groups: sudo
+        create_home: yes
+
+    - name: Create .ssh directory
+      file:
+        path: "/home/{{ DEPLOY_USER }}/.ssh"
+        state: directory
+        owner: "{{ DEPLOY_USER }}"
+        group: "{{ DEPLOY_USER }}"
+        mode: "0700"
+
+    - name: Fetch public keys from GitHub
+      uri:
+        url: "https://api.github.com/users/{{ github_user }}/keys"
+        return_content: yes
+      register: github_keys
+
+    - name: Ensure authorized_keys file exists
+      file:
+        path: "/home/{{ DEPLOY_USER }}/.ssh/authorized_keys"
+        state: touch
+        owner: "{{ DEPLOY_USER }}"
+        group: "{{ DEPLOY_USER }}"
+        mode: "0600"
+
+    - name: Add GitHub public keys to authorized_keys
+      lineinfile:
+        path: "/home/{{ DEPLOY_USER }}/.ssh/authorized_keys"
+        line: "{{ item.key }}"
+        create: yes
+        owner: "{{ DEPLOY_USER }}"
+        group: "{{ DEPLOY_USER }}"
+        mode: "0600"
+        state: present
+      loop: "{{ github_keys.json }}"
+
+    - name: Ensure sudoers file for admin user
+      copy:
+        dest: "/etc/sudoers.d/{{ DEPLOY_USER }}"
+        content: "{{ DEPLOY_USER }} ALL=(ALL) NOPASSWD:ALL"
+        mode: "0440"

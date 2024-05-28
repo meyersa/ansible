@@ -3,6 +3,6 @@
 - name: Configure Timezone
   tags: ["timezone"]
   block:
-    - name: Set the timezone to America/Detroit
+    - name: Set the timezone
       timezone:
-        name: America/Detroit
+        name: "{{ DEPLOY_TIMEZONE }}"

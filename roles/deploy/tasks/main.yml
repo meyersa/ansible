@@ -1,3 +1,6 @@
+# Create user account
+- import_tasks: user.yml
+
 # Update host
 - import_tasks: ../../util/update.yml
 
