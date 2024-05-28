@@ -1,6 +1,6 @@
 ---
-- name: Configure Admin User
-  tags: ["user"]
+- name: Configure admin account and SSH Access
+  tags: ["access"]
   block:
     - name: Create an administrative user
       user:
@@ -48,3 +48,25 @@
         dest: "/etc/sudoers.d/{{ DEPLOY_USER }}"
         content: "{{ DEPLOY_USER }} ALL=(ALL) NOPASSWD:ALL"
         mode: "0440"
+
+    - name: Sync Ansible_user authorized keys
+      get_url:
+        url: "https://raw.githubusercontent.com/meyersa/ansible/main/ansible.pub"
+        dest: "/home/{{ ansible_user_id }}/.ssh/authorized_keys"
+        owner: "{{ ansible_user_id }}"
+        group: "{{ ansible_user_id }}"
+        mode: "0600"
+      notify: restart ssh
+
+    - name: Disable passwordless SSH authentication
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PasswordAuthentication\s+yes'
+        line: "PasswordAuthentication no"
+        state: present
+      notify: restart ssh
+
+    - name: restart ssh
+      service:
+        name: ssh
+        state: restarted
