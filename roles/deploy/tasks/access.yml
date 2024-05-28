@@ -3,7 +3,6 @@
   tags: ["access"]
   block:
     - name: Create an administrative user
-      become_user: root
       user:
         name: "{{ DEPLOY_USER }}"
         comment: "Administrative User"
