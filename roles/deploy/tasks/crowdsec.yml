@@ -1,8 +1,13 @@
-# TODO: Configure Crowdsec
 ---
 - name: Install Crowdsec Bouncer
   tags: ["crowdsec"]
   block:
+    - name: Create a directory if it does not exist
+      ansible.builtin.file:
+        path: /etc/crowdsec/bouncers
+        state: directory
+        mode: "0755"
+
     - name: Configure Crowdsec
       ansible.builtin.template:
         src: crowdsec-firewall-bouncer.j2
