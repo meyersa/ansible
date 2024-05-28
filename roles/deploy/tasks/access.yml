@@ -68,7 +68,6 @@
         regexp: '^#?PasswordAuthentication\s+yes'
         line: "PasswordAuthentication no"
         state: present
-      notify: restart ssh
 
     - name: restart ssh
       service:
