@@ -47,6 +47,7 @@
       loop: "{{ github_keys.json }}"
 
     - name: Ensure sudoers file for admin user
+      become_user: root
       copy:
         dest: "/etc/sudoers.d/{{ DEPLOY_USER }}"
         content: "{{ DEPLOY_USER }} ALL=(ALL) NOPASSWD:ALL"
