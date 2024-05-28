@@ -2,5 +2,8 @@
 - name: Common Deployment Playbook
   hosts: all
   become: true
+  vars: 
+    github_user: "meyersa"
+    DEPLOY_TIMEZONE: "America/Detroit"
   roles: 
     - deploy
