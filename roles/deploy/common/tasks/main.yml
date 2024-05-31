@@ -23,9 +23,6 @@
 # Install Crowdsec
 - import_tasks: crowdsec.yml
 
-# Install Docker
-- import_tasks: docker.yml
-
 # Reboot Host
 - import_tasks: ../../util/reboot.yml
 

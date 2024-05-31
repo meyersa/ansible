@@ -1,6 +1,6 @@
 ---
-- name: Reoccuring Playbook
+- name: Common Reoccuring
   hosts: all
   become: true
   roles: 
-    - reoccuring
+    - reoccuring/common

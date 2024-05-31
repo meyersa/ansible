@@ -1,0 +1,25 @@
+---
+- name: Install Kubernetes
+  tags: ["kubernetes"]
+  block:
+    - name: Add Kubernete's official GPG key
+      ansible.builtin.apt_key:
+        url: https://pkgs.k8s.io/core:/stable:/v1.30/deb/Release.key
+        keyring: /etc/apt/keyrings/kubernetes.gpg
+        state: present
+
+    - name: Add Kubernetes Repository
+      ansible.builtin.apt_repository:
+        repo: >-
+          deb [signed-by=/etc/apt/keyrings/kubernetes.gpg] https://pkgs.k8s.io/core:/stable:/v1.30/deb/ /
+        filename: kubernetes
+        state: present
+
+    - name: Install Kubernetes and related packages
+      ansible.builtin.apt:
+        name:
+          - kubectl
+          - kubeadm
+          - kubelet
+        state: present
+        update_cache: true

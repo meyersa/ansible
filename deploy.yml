@@ -1,5 +1,5 @@
 ---
-- name: Common Deployment Playbook
+- name: Common Deployment Role
   hosts: all
   become: true
   become_user: root
@@ -8,4 +8,18 @@
     DEPLOY_TIMEZONE: "America/Detroit"
     DEPLOY_ANSIBLE_USER: ansible
   roles: 
-    - deploy
+    - deploy/common
+
+- name: Docker Deployment Role
+  hosts: docker
+  become: true
+  roles: 
+    - deploy/docker
+
+- name: Kubernetes Deployment Roles
+  hosts: kubernetes
+  become: true
+  roles: 
+    - deploy/docker
+    - deploy/kubernetes
+
