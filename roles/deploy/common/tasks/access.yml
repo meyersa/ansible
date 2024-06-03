@@ -49,6 +49,12 @@
         content: "{{ DEPLOY_USER }} ALL=(ALL) NOPASSWD:ALL"
         mode: "0440"
 
+    - name: Ensure sudoers file for ansible user
+      copy:
+        dest: "/etc/sudoers.d/{{ DEPLOY_ANSIBLE_USER }}"
+        content: "{{ DEPLOY_ANSIBLE_USER }} ALL=(ALL) NOPASSWD:ALL"
+        mode: "0440"
+
     - name: Sync Ansible_user authorized keys
       get_url:
         url: "https://raw.githubusercontent.com/meyersa/ansible/main/ansible.pub"

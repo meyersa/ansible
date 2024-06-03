@@ -5,9 +5,6 @@
     - name: Install required system packages
       ansible.builtin.apt:
         pkg:
-          - cpp
-          - cmake
-          - clang
           - python3
           - git
           - dnsutils
