@@ -20,6 +20,5 @@
   hosts: kubernetes
   become: true
   roles: 
-    - deploy/docker
     - deploy/kubernetes
 

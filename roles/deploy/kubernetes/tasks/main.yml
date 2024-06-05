@@ -1,86 +1,69 @@
 ---
-# Install Kubernetes dep
-- name: Add Kubernete's official GPG key
-  ansible.builtin.apt_key:
-    url: https://pkgs.k8s.io/core:/stable:/v1.30/deb/Release.key
-    keyring: /etc/apt/keyrings/kubernetes.gpg
-    state: present
+- name: Install MicroK8s
+  community.general.snap:
+    name: microk8s
+    classic: true
 
-- name: Add Kubernetes Repository
-  ansible.builtin.apt_repository:
-    repo: >-
-      deb [signed-by=/etc/apt/keyrings/kubernetes.gpg] https://pkgs.k8s.io/core:/stable:/v1.30/deb/ /
-    filename: kubernetes
-    state: present
+- name: Add ansible to MicroK8s group
+  ansible.builtin.user:
+    name: "{{ ansible_user }}"
+    groups: microk8s
+    append: true
 
-- name: Install Kubernetes and related packages
-  ansible.builtin.apt:
-    name:
-      - kubectl
-      - kubeadm
-      - kubelet
-      - containerd
-    state: present
-    update_cache: true
+- name: Add generic user to MicroK8s group
+  ansible.builtin.user:
+    name: "{{ DEPLOY_USER }}"
+    groups: microk8s
+    append: true
 
-# Containerd setup
-- name: Create containerd configuration directory
-  file:
-    path: /etc/containerd
-    state: directory
-
-# I don't think this works
-- name: Containerd config
-  ansible.builtin.template:
-    src: containerd.j2
-    dest: /etc/containerd/config.toml
-
-# Preflight changes to host
-- name: Set ip_forward
-  sysctl:
-    name: net.ipv4.ip_forward
-    value: 1
-
-# K8 settings
-- name: Check if Kubernetes is already initialized
-  command: test -f /etc/kubernetes/admin.conf
-  register: kubeadm_initialized
-  ignore_errors: true
-
-- name: Create K8 network
-  shell: sudo kubeadm init --pod-network-cidr=192.168.0.0/16
-  when: kubeadm_initialized.rc != 0
-
-- name: Set KubeConfig export
-  shell: export KUBECONFIG=/etc/kubernetes/admin.conf
-  when: kubeadm_initialized.rc != 0
-
-- name: Deploy CNI
-  shell: kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.28.0/manifests/tigera-operator.yaml
-  environment:
-    KUBECONFIG: /etc/kubernetes/admin.conf
-  when: kubeadm_initialized.rc != 0
-
-- name: Deploy CNI Options
-  shell: kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.28.0/manifests/custom-resources.yaml
-  environment:
-    KUBECONFIG: /etc/kubernetes/admin.conf
-  when: kubeadm_initialized.rc != 0
-
-# Set K8 for deployuser
-- name: Create containerd configuration directory
-  file:
+- name: Change file ownership, group and permissions
+  ansible.builtin.file:
     path: "/home/{{ DEPLOY_USER }}/.kube"
+    owner: "{{ DEPLOY_USER }}"
+    group: "{{ DEPLOY_USER }}"
     state: directory
-    owner: "{{ DEPLOY_USER }}"
-    group: "{{ DEPLOY_USER }}"
-    mode: "0755"
+    mode: '0644'
 
-- name: Copy file with owner and permissions
-  ansible.builtin.copy:
-    remote_src: yes
-    src: /etc/kubernetes/admin.conf
-    dest: "/home/{{ DEPLOY_USER }}/.kube/config"
-    owner: "{{ DEPLOY_USER }}"
-    group: "{{ DEPLOY_USER }}"
-    mode: "0755"
+  # TODO: Restrict this by network/endpoints
+- name: Open UFW Port for K8s
+  community.general.ufw:
+    rule: allow
+    port: '25000'
+
+- name: Setup master node
+  when: "'master' in group_names"
+  block:
+    # TODO: Restrict this by network/endpoints
+    - name: Open UFW Port for K8 master
+      community.general.ufw:
+        rule: allow
+        port: '16443'
+        
+    - name: Enable CIS Hardening 
+      shell: microk8s enable cis-hardening
+
+    - name: Enable community plugins 
+      shell: microk8s enable community
+
+    - name: Enable Trivy security scans 
+      shell: microk8s enable trivy
+
+    - name: Add Node Command
+      shell: microk8s add-node --token-ttl 3600
+      register: join_cluster
+
+    - name: Set Join as Fact
+      set_fact:
+        join: "{{ join_cluster.stdout_lines[4] }}"
+
+    - name: Add K8s join command to a dummy host
+      add_host:
+        name: K8_Holder
+        command: "{{ join }}"
+
+# TODO: Don't run if already in a cluster
+- name: Join from command
+  when: "'worker' in group_names"
+  shell: "{{ hostvars['K8_Holder']['command'] }}"
+
+  
