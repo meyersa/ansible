@@ -18,8 +18,8 @@
 
   - name: Copy Mongo Init template
     ansible.builtin.template:
-      src: docker-compose.yml.j2
-      dest: "{{ project }}/mongo-init.js"
+      src: init-mongo.js.j2
+      dest: "{{ project }}/init-mongo.js"
       mode: '0755'
 
   - name: Tear down existing services
@@ -32,13 +32,11 @@
     community.docker.docker_compose_v2:
       project_src: "{{ project }}"
       profiles: all
+    register: output
 
-  - name: Show results
-    ansible.builtin.debug:
-      var: output
-      
-  - name: Verify that Unifi and db services are running
-    ansible.builtin.assert:
+  - name: Ensure all Unifi containers are running
+    assert:
       that:
-        - "output.services.unifi-network-application.unifi-network-application.state.running"
-        - "output.services.unifi-db.unifi-db.state.running"
+        - "{{ item.State == 'running' }}"
+      fail_msg: "Container {{ item.Name }} is not running. Current state: {{ item.State }}"
+    with_items: "{{ output.containers }}"
