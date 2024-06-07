@@ -1,0 +1,44 @@
+---
+- name: Install Unifi Controller
+  tags: ["unifi"]
+  vars: 
+  - project: "/etc/unifi"
+  block:
+  - name: Create Unifi Config directory
+    ansible.builtin.file:
+      path: "{{ project }}"
+      state: directory
+      mode: '0755'
+
+  - name: Copy Compose template
+    ansible.builtin.template:
+      src: docker-compose.yml.j2
+      dest: "{{ project }}/docker-compose.yml"
+      mode: '0755'
+
+  - name: Copy Mongo Init template
+    ansible.builtin.template:
+      src: docker-compose.yml.j2
+      dest: "{{ project }}/mongo-init.js"
+      mode: '0755'
+
+  - name: Tear down existing services
+    community.docker.docker_compose_v2:
+      project_src: "{{ project }}"
+      profiles: all
+      state: absent
+
+  - name: Create and start services
+    community.docker.docker_compose_v2:
+      project_src: "{{ project }}"
+      profiles: all
+
+  - name: Show results
+    ansible.builtin.debug:
+      var: output
+      
+  - name: Verify that Unifi and db services are running
+    ansible.builtin.assert:
+      that:
+        - "output.services.unifi-network-application.unifi-network-application.state.running"
+        - "output.services.unifi-db.unifi-db.state.running"
