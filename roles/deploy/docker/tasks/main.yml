@@ -73,3 +73,16 @@
         name: docker.service
         enabled: true
         state: started
+
+    - name: Add watchtower for automatic updates 
+      docker_container:
+        name: watchtower
+        image: containrrr/watchtower
+        restart_policy: always
+        hostname: "{{ ansible_hostname }}"
+        volumes:
+          - /var/run/docker.sock:/var/run/docker.sock
+        env:
+          WATCHTOWER_NOTIFICATION_REPORT: "true"
+          WATCHTOWER_NOTIFICATION_URL: "{{ WATCHTOWER_URL }}"
+        state: started

@@ -1,0 +1,11 @@
+# ddclient.conf
+#
+ssl=yes
+daemon=5m
+use=web, web=https://checkip.amazonaws.com
+protocol=cloudflare, \
+zone={{ DDCLIENT_ZONE }}, \
+ttl=1, \
+login=token, \
+password={{ DDCLIENT_API_KEY }} \
+{{ DDCLIENT_HOSTNAME }}.{{ DDCLIENT_ZONE }}

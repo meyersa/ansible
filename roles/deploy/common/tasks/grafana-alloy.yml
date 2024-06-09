@@ -1,0 +1,76 @@
+---
+- name: Install Grafana Alloy for Monitoring
+  tags: ["alloy"]
+  block:
+    - name: Set Alloy hostname 
+      set_fact: 
+        ALLOY_HOSTNAME: "{{ ansible_hostname }}"
+
+    - name: Create a directory for config if it does not exist
+      ansible.builtin.file:
+        path: /etc/alloy/
+        state: directory
+        mode: "0755"
+
+    - name: Copy Alloy config
+      ansible.builtin.template:
+        src: config.alloy.j2
+        dest: /etc/alloy/config.alloy
+        force: yes
+
+    - name: Download the GeoDB
+      get_url:
+        url: https://github.com/meyersa/common/raw/main/maxmind/GeoLite2-City.mmdb
+        dest: /etc/alloy/GeoLite2-City.mmdb
+        mode: '0755'
+
+    - name: Add Grafana's official GPG key
+      ansible.builtin.apt_key:
+        url: https://apt.grafana.com/gpg.key
+        keyring: /etc/apt/keyrings/grafana.gpg
+        state: present
+
+    - name: Add Grafana repository
+      ansible.builtin.apt_repository:
+        repo: >-
+          deb [signed-by=/etc/apt/keyrings/grafana.gpg] https://apt.grafana.com stable main
+        filename: grafana
+        state: present
+
+    - name: Install Alloy
+      ansible.builtin.apt:
+        name:
+          - alloy
+        state: present
+        update_cache: true
+
+    - name: Enable and start Alloy
+      ansible.builtin.systemd:
+        name: alloy
+        enabled: true
+        state: started
+
+    - name: Add alloy user to docker group if it exists
+      ansible.builtin.user:
+        name: alloy
+        groups: docker
+        append: yes
+      when: "'docker' in group_names"
+
+    # - name: Restart Alloy service to apply Docker group changes
+    #   ansible.builtin.systemd:
+    #     name: alloy
+    #     state: restarted
+    #   when: "'docker' in group_names"
+
+    # - name: Check Alloy service status
+    #   ansible.builtin.systemd:
+    #     name: alloy
+    #     register: alloy_status
+
+    # - name: Assert that Alloy service is running
+    #   assert:
+    #     that:
+    #       - alloy_status.status.ActiveState == 'active'
+    #       - alloy_status.status.SubState == 'running'
+    #     fail_msg: "The Alloy service is not running as expected."

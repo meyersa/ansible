@@ -1,0 +1,26 @@
+---
+- name: Configure ddclient for DDNS hostname
+  tags: ["ddclient"]
+  block:
+    - name: Set ddclient hostname 
+      set_fact: 
+        DDCLIENT_HOSTNAME: "{{ ansible_hostname[:2] }}"
+    
+    - name: Install ddclient 
+      ansible.builtin.apt:
+        name:
+          - ddclient
+        state: present
+        update_cache: true
+
+    - name: Copy ddclient config
+      ansible.builtin.template:
+        src: ddclient.conf.j2
+        dest: /etc/ddclient.conf
+        force: yes
+
+    - name: Enable and start ddclient
+      ansible.builtin.systemd:
+        name: ddclient
+        enabled: true
+        state: started
