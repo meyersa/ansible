@@ -78,11 +78,27 @@
       docker_container:
         name: watchtower
         image: containrrr/watchtower
-        restart_policy: always
+        state: started
+        restart_policy: unless-stopped
         hostname: "{{ ansible_hostname }}"
         volumes:
           - /var/run/docker.sock:/var/run/docker.sock
         env:
           WATCHTOWER_NOTIFICATION_REPORT: "true"
           WATCHTOWER_NOTIFICATION_URL: "{{ WATCHTOWER_URL }}"
+
+    - name: Create proxy network
+      docker_network:
+        name: proxy
+
+    - name: Add Cloudflared for proxying
+      docker_container: 
+        name: cloudflared 
+        image: cloudflare/cloudflared
         state: started
+        restart_policy: unless-stopped
+        command: tunnel run 
+        env: 
+          TUNNEL_TOKEN: "{{ CLOUDFLARED_TOKEN }}"
+        networks: 
+          - name: proxy

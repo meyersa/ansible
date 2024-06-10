@@ -1,0 +1,200 @@
+services:
+
+  ### Jellyfin 
+  jellyfin:
+    profiles: [ jellyfin, all ]
+    image: jellyfin/jellyfin:latest
+    container_name: jellyfin
+    volumes:
+      - {{ config_dir }}/jellyfin/config:/config
+      - {{ tvshows_dir }}:/media/tvshows
+      - {{ movies_dir }}:/media/movies
+    restart: always
+    ports: 
+      - '8096:8096'
+    user: 1000:1000
+    group_add: 
+      - '{{ render_group }}'
+    devices:
+      - /dev/dri/renderD128:/dev/dri/renderD128
+
+  ### Movie Finding 
+
+  radarr:
+    profiles: [ radarr, finding, all ]
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - {{ config_dir }}/radarr/data:/config
+      - {{ movies_dir }}:/movies
+      - {{ temp_dir }}/downloads:/downloads
+    restart: always
+    depends_on: 
+      - vpn
+    ports: 
+      - '7878:7878'
+
+  sonarr:
+    profiles: [ sonarr, finding, all ]
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - {{ config_dir }}/sonarr/data:/config
+      - {{ tvshows_dir }}:/tv
+      - {{ temp_dir }}/downloads:/downloads
+    restart: always
+    depends_on: 
+      - vpn
+    ports: 
+      - '8989:8989'
+
+  prowlarr:
+    profiles: [ prowlarr, finding, all ]
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - {{ config_dir }}/prowlarr/data:/config
+    restart: always
+    depends_on:
+      - vpn
+    ports: 
+      - '9696:9696'
+
+  ### Movie Downloading
+
+  vpn: 
+    profiles: [ glueton, double, finding, vpn, all ]
+    image: qmcgaw/gluetun 
+    container_name: vpn 
+    cap_add: 
+      - NET_ADMIN 
+    devices: 
+      - /dev/net/tun:/dev/net/tun 
+    restart: always
+    environment:
+      - VPN_SERVICE_PROVIDER=custom
+      - VPN_TYPE=wireguard
+      - VPN_ENDPOINT_IP={{ JF_WG_IP }}
+      - VPN_ENDPOINT_PORT={{ JF_WG_Port }}
+      - WIREGUARD_PUBLIC_KEY={{ JF_WG_Pub }}
+      - WIREGUARD_PRIVATE_KEY={{ JF_WG_Priv }}
+      - WIREGUARD_PRESHARED_KEY={{ JF_WG_Pre }}
+      - WIREGUARD_ADDRESSES={{ JF_WG_Add }}
+      - TZ=Etc/UTC
+      - HTTPPROXY=on 
+    expose: 
+      - 8080
+    ports: 
+      - '8080:8080'
+    labels: 
+      - 'com.centurylinklabs.watchtower.enable=false' 
+
+  qbittorrent:
+    profiles: [ qbittorrent, double, vpn, all ]
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - DELUGE_LOGLEVEL=error
+    volumes:
+      - {{ config_dir }}/qbittorrent/config:/config
+      - {{ temp_dir }}/downloads:/downloads
+    network_mode: 'service:vpn'
+    restart: always 
+    depends_on:
+      - vpn
+    labels: 
+      - 'com.centurylinklabs.watchtower.enable=false' 
+
+  ### Post Processing
+
+  bazarr-online:
+    profiles: [ bazarr, finding, all ]
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: bazarr-online
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - {{ config_dir }}/bazarr-online/config:/config
+      - {{ movies_dir }}:/movies
+      - {{ tvshows_dir }}:/tv
+    restart: always
+    ports: 
+      - '6767:6767'
+
+  bazarr-whisperr:
+    profiles: [ bazarr, finding, all ]
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: bazarr-whisperr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - {{ config_dir }}/bazarr-whisperr/config:/config
+      - {{ movies_dir }}:/movies
+      - {{ tvshows_dir }}:/tv
+    restart: always
+    ports: 
+      - '6868:6767'
+
+  whisperasr:
+    profiles: [ whisperasr, all ]
+    image: onerahmet/openai-whisper-asr-webservice:latest-gpu
+    container_name: whisperasr
+    environment:
+      - ASR_MODEL=base
+      - ASR_ENGINE=faster_whisper
+    restart: always
+    group_add: 
+      - '{{ render_group }}'
+    devices:
+      - /dev/dri/renderD128:/dev/dri/renderD128
+
+
+  tdarr:
+    profiles: [ tdarr, all ]
+    container_name: tdarr
+    image: ghcr.io/haveagitgat/tdarr:latest
+    ports:
+      - '8265:8265'
+    environment:
+      - TZ=America/Detroit
+      - PUID=1000
+      - PGID=1000
+      - serverIP=0.0.0.0
+      - serverPort=8266
+      - webUIPort=8265
+      - internalNode=true
+      - inContainer=true
+      - ffmpegVersion=6
+      - nodeName=Internal
+    volumes:
+      - {{ config_dir }}/tdarr/server:/app/server
+      - {{ config_dir }}/tdarr/configs:/app/configs
+      - {{ config_dir }}/tdarr/logs:/app/logs
+      - {{ tvshows_dir }}:/media/tvshows
+      - {{ movies_dir }}:/media/movies
+      - {{ temp_dir }}/tdarr:/temp
+    restart: always
+
+networks: 
+  default: 
+    name: proxy 
+    external: true

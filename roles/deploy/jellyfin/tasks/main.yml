@@ -1,1 +1,112 @@
-#TODO: Example, install Jellyfin
+---
+- name: Setup Jellyfin stack
+  tags: ["Jellyfin"]
+  vars: 
+    tvshows_dir: /media/tvshows
+    movies_dir: /media/movies
+    project_src: /etc/jellyfin
+    config_dir: /srv/jellyfin
+    temp_dir: /tmp/jellyfin
+  block:
+    - name: Run the ls command in /dev/dri
+      command: "ls -la /dev/dri"
+      register: ls_output
+
+    - name: Assert that renderD128 exists in the ls output
+      assert:
+        that:
+          - "'renderD128' in ls_output.stdout"
+        fail_msg: "renderD128 not found in /dev/dri"
+        success_msg: "renderD128 exists in /dev/dri"
+
+    - name: Ensure project directory exists
+      ansible.builtin.file: 
+        path: "{{ project_src }}"
+        state: directory
+        mode: '0755'
+
+    - name: Ensure config directory exists
+      ansible.builtin.file: 
+        path: "{{ config_dir }}"
+        state: directory
+        recurse: yes
+        mode: '0775'
+        owner: 1000
+        group: 1000
+
+    - name: Ensure group "media" exists
+      ansible.builtin.group:
+        name: media
+        state: present
+
+    - name: Adding existing user '{{ DEPLOY_USER }}' to group media
+      user:
+        name: '{{ DEPLOY_USER }}'
+        groups: media
+        append: yes
+
+    - name: Adding Ansible user to group media
+      user: 
+        name: '{{ DEPLOY_ANSIBLE_USER }}'
+        groups: media 
+        append: yes 
+        
+    - name: Ensure tvshows directory exists
+      ansible.builtin.file:
+        path: "{{ tvshows_dir }}"
+        state: directory
+        recurse: yes
+        mode: '0775'
+        owner: 1000
+        group: media
+    
+    - name: Ensure movies directory exists
+      ansible.builtin.file:
+        path: "{{ movies_dir }}"
+        state: directory
+        recurse: yes
+        mode: '0775'
+        owner: 1000
+        group: media
+
+    - name: Ensure temp directory exists
+      ansible.builtin.file: 
+        path: "{{ temp_dir }}"
+        state: directory
+        recurse: yes
+        mode: '0755'
+        owner: 1000
+        group: 1000
+
+    - name: Find the render group 
+      shell: getent group render | cut -d':' -f3
+      register: render_output
+
+    - name: Set render group as fact
+      set_fact:
+        render_group: "{{ render_output.stdout }}"
+
+    - name: Copy Compose template
+      ansible.builtin.template:
+        src: docker-compose.yml.j2
+        dest: "{{ project_src }}/docker-compose.yml"
+        mode: '0755'
+
+    - name: Compose down
+      community.docker.docker_compose_v2:
+        project_src: "{{ project_src }}"
+        profiles: all
+        state: absent
+
+    - name: Compose up
+      community.docker.docker_compose_v2:
+        project_src: "{{ project_src }}"
+        profiles: all
+      register: output
+
+    - name: Ensure all Jellyfin containers are running
+      assert:
+        that:
+          - "{{ item.State == 'running' }}"
+        fail_msg: "Container {{ item.Name }} is not running. Current state: {{ item.State }}"
+      with_items: "{{ output.containers }}"
