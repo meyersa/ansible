@@ -8,8 +8,8 @@
         shell: /bin/bash
         comment: "Administrative User"
         groups: sudo
-        create_home: yes
-
+        append: yes 
+        
     - name: Create .ssh directory
       file:
         path: "/home/{{ DEPLOY_USER }}/.ssh"
@@ -51,16 +51,16 @@
 
     - name: Ensure sudoers file for ansible user
       copy:
-        dest: "/etc/sudoers.d/{{ DEPLOY_ANSIBLE_USER }}"
-        content: "{{ DEPLOY_ANSIBLE_USER }} ALL=(ALL) NOPASSWD:ALL"
+        dest: "/etc/sudoers.d/{{ ansible_user }}"
+        content: "{{ ansible_user }} ALL=(ALL) NOPASSWD:ALL"
         mode: "0440"
 
     - name: Sync Ansible_user authorized keys
       get_url:
         url: "https://raw.githubusercontent.com/meyersa/ansible/main/ansible.pub"
-        dest: "/home/{{ DEPLOY_ANSIBLE_USER }}/.ssh/authorized_keys"
-        owner: "{{ DEPLOY_ANSIBLE_USER }}"
-        group: "{{ DEPLOY_ANSIBLE_USER }}"
+        dest: "/home/{{ ansible_user }}/.ssh/authorized_keys"
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
         mode: "0600"
 
     - name: Disable passwordless SSH authentication
