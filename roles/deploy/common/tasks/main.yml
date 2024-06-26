@@ -15,10 +15,7 @@
     mode: "0755"
 
 # Set Hostname 
-- name: Set a hostname specifying strategy
-  ansible.builtin.hostname:
-    name: "{{ inventory_hostname }}"
-    use: systemd
+- import_tasks: hostname.yml
 
 # Set TimeZone
 - import_tasks: timezone.yml
@@ -28,6 +25,9 @@
 
 # Install Crowdsec
 - import_tasks: crowdsec-bouncer.yml
+
+# Install Warp
+- import_tasks: warp.yml
 
 # DDNS
 - import_tasks: ddclient.yml 
@@ -39,7 +39,7 @@
 - import_tasks: swap.yml
 
 # Reboot Host
-# - import_tasks: ../../util/reboot.yml
+- import_tasks: ../../util/reboot.yml
 
 - name: Send a message to the Discord channel
   community.general.discord:

@@ -1,0 +1,65 @@
+---
+- name: Install Cloudflare Warp for Access
+  tags: ["warp"]
+  block:
+    - name: Add Cloudflare's official GPG key
+      ansible.builtin.apt_key:
+        url: https://pkg.cloudflareclient.com/pubkey.gpg
+        keyring: /etc/apt/keyrings/cloudflare-warp-archive-keyring.gpg
+        state: present
+
+    # Um.. Fix this in the future when Cloudflare decides to make packages for current LTS versions
+    - name: Add Cloudflare repository
+      ansible.builtin.apt_repository:
+        repo: >-
+          deb [signed-by=/etc/apt/keyrings/cloudflare-warp-archive-keyring.gpg] https://pkg.cloudflareclient.com/ jammy main
+        filename: cloudflare-client
+        state: present
+
+    - name: Install Warp
+      ansible.builtin.apt:
+        name:
+          - cloudflare-warp
+        state: present
+        update_cache: true
+
+    - name: Copy Warp config
+      ansible.builtin.template:
+        src: warp.xml.j2
+        dest: /var/lib/cloudflare-warp/mdm.xml
+        force: yes
+
+    - name: Copy the Cloudflare Warp service file to var/lib directory
+      template:
+        src: warp-svc.service.j2
+        dest: /lib/systemd/system/warp-svc.service
+        mode: '0644'
+      register: service_file_result
+
+    - name: Set variable if service file changed
+      set_fact:
+        service_file_changed: "{{ service_file_result.changed }}"
+
+    - name: Reload systemd if service file was changed
+      command: systemctl daemon-reload
+      when: service_file_changed
+
+    - name: Enable and start Warp
+      ansible.builtin.systemd:
+        name: warp-svc
+        enabled: true
+        state: started
+
+    - name: Run warp-cli and register the output
+      command: warp-cli --accept-tos status
+      register: warp_cli_output
+
+    - name: Run warp-cli registration if needed
+      command: warp-cli --accept-tos registration new
+      when: warp_cli_output.stdout_lines[0] == "Registration Missing"
+
+    - name: Connect Warp 
+      ansible.builtin.shell: warp-cli --accept-tos connect
+
+    - name: Confirm Route
+      ansible.builtin.shell: "ping {{ ANSIBLE_WARP_ADDR }} -c 1"
