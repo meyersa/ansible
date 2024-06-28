@@ -2,7 +2,7 @@
 #
 ssl=yes
 daemon=5m
-use=web, web=https://checkip.amazonaws.com
+use=web, web=https://icanhazip.com/, web-skip='\\n\\n'
 protocol=cloudflare, \
 zone={{ DDCLIENT_ZONE }}, \
 ttl=1, \
