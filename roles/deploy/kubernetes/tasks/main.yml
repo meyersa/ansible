@@ -22,48 +22,70 @@
     owner: "{{ DEPLOY_USER }}"
     group: "{{ DEPLOY_USER }}"
     state: directory
-    mode: '0644'
+    mode: '0755'
 
-  # TODO: Restrict this by network/endpoints
 - name: Open UFW Port for K8s
   community.general.ufw:
     rule: allow
     port: '25000'
+    src: 100.96.0.0/12
+    proto: tcp
+
+# Configure hosts
+- import_tasks: hosts.yml
 
 - name: Setup master node
-  when: "'master' in group_names"
+  when: KUBERNETES_MASTER
   block:
-    # TODO: Restrict this by network/endpoints
     - name: Open UFW Port for K8 master
       community.general.ufw:
         rule: allow
-        port: '16443'
-        
+        port: "{{ item }}"
+        src: 100.96.0.0/12
+        proto: tcp
+      loop: 
+        - 16443
+        - 12379
+        - 10250
+        - 10255
+        - 10257
+        - 10259
+        - 19001
+        - 4789
+
     - name: Enable CIS Hardening 
-      shell: microk8s enable cis-hardening
+      command: microk8s enable cis-hardening
 
     - name: Enable community plugins 
-      shell: microk8s enable community
+      command: microk8s enable community
 
     - name: Enable Trivy security scans 
-      shell: microk8s enable trivy
+      command: microk8s enable trivy
 
     - name: Add Node Command
-      shell: microk8s add-node --token-ttl 3600
+      command: microk8s add-node --token-ttl 3600
       register: join_cluster
 
     - name: Set Join as Fact
       set_fact:
-        join: "{{ join_cluster.stdout_lines[4] }}"
+        join: "{{ join_cluster.stdout_lines[8] }}"
+    
+    - name: Run kubectl to get the list of nodes
+      command: microk8s kubectl get nodes -o json
+      register: kubectl_output
 
-    - name: Add K8s join command to a dummy host
-      add_host:
-        name: K8_Holder
-        command: "{{ join }}"
+    - name: Parse the list of nodes to get hostnames
+      set_fact:
+        k8s_node_names: "{{ kubectl_output.stdout | from_json | json_query('items[*].metadata.name') }}"
 
-# TODO: Don't run if already in a cluster
-- name: Join from command
-  when: "'worker' in group_names"
-  shell: "{{ hostvars['K8_Holder']['command'] }}"
+- name: Join Kubernetes Cluster
+  when: not KUBERNETES_MASTER
+  block:
+  - name: Check if the host is in the k8s node list
+    when: not KUBERNETES_MASTER
+    set_fact:
+      is_k8s_node: "{{ inventory_hostname in hostvars[groups['prod'][0]]['k8s_node_names'] }}"
 
-  
+  - name: Join from command
+    when: not is_k8s_node
+    command: "{{ hostvars[groups['prod'][0]]['join'] }}"
