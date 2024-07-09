@@ -59,7 +59,7 @@
       when: warp_cli_output.stdout_lines[0] == "Registration Missing"
 
     - name: Connect Warp 
-      ansible.builtin.shell: warp-cli --accept-tos connect
+      ansible.builtin.command: warp-cli --accept-tos connect
 
     - name: Confirm Route
-      ansible.builtin.shell: "ping {{ ANSIBLE_WARP_ADDR }} -c 1"
+      ansible.builtin.command: "ping {{ ANSIBLE_WARP_ADDR }} -c 10"

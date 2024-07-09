@@ -9,7 +9,7 @@
         state: present
 
     - name: Get DEB architecture
-      shell: dpkg --print-architecture
+      command: dpkg --print-architecture
       register: deb_architecture
 
     - name: Add Docker repository
