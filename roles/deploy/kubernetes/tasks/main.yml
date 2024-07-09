@@ -34,6 +34,9 @@
 # Configure hosts
 - import_tasks: hosts.yml
 
+# Install Helm
+- import_tasks: helm.yml
+
 - name: Setup master node
   when: KUBERNETES_MASTER
   block:
