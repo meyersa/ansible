@@ -6,7 +6,7 @@
     movies_dir: /media/movies
     project_src: /etc/jellyfin
     config_dir: /srv/jellyfin
-    temp_dir: /tmp/jellyfin
+    temp_dir: /media/tmp
   block:
     - name: Run the ls command in /dev/dri
       command: "ls -la /dev/dri"
@@ -47,7 +47,7 @@
 
     - name: Adding Ansible user to group media
       user: 
-        name: '{{ DEPLOY_ANSIBLE_USER }}'
+        name: '{{ ansible_user }}'
         groups: media 
         append: yes 
         
@@ -79,7 +79,7 @@
         group: 1000
 
     - name: Find the render group 
-      shell: getent group render | cut -d':' -f3
+      command: getent group render | cut -d':' -f3
       register: render_output
 
     - name: Set render group as fact

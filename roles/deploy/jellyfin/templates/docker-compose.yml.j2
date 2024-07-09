@@ -193,6 +193,8 @@ services:
       - {{ movies_dir }}:/media/movies
       - {{ temp_dir }}/tdarr:/temp
     restart: always
+    devices:
+      - /dev/dri/renderD128:/dev/dri/renderD128
 
 networks: 
   default: 
