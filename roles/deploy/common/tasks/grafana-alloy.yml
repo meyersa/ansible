@@ -56,21 +56,4 @@
         groups: docker
         append: yes
       when: "'docker' in group_names"
-
-    # - name: Restart Alloy service to apply Docker group changes
-    #   ansible.builtin.systemd:
-    #     name: alloy
-    #     state: restarted
-    #   when: "'docker' in group_names"
-
-    # - name: Check Alloy service status
-    #   ansible.builtin.systemd:
-    #     name: alloy
-    #     register: alloy_status
-
-    # - name: Assert that Alloy service is running
-    #   assert:
-    #     that:
-    #       - alloy_status.status.ActiveState == 'active'
-    #       - alloy_status.status.SubState == 'running'
-    #     fail_msg: "The Alloy service is not running as expected."
+      ignore_errors: True

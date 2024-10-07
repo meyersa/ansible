@@ -63,3 +63,9 @@
 
     - name: Confirm Route
       ansible.builtin.command: "ping {{ ANSIBLE_WARP_ADDR }} -c 10"
+
+    - name: Add cron job to ping 1.1.1.4
+      ansible.builtin.cron:
+        name: "warp-keep-alive"
+        minute: "*/30"
+        job: "/bin/ping 1.1.1.4 -c 10"

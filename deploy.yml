@@ -6,7 +6,6 @@
   vars: 
     github_user: "meyersa"
     DEPLOY_TIMEZONE: "America/Detroit"
-    DEPLOY_ANSIBLE_USER: ansible
   roles: 
     - deploy/common
 

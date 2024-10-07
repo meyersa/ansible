@@ -23,5 +23,6 @@
           - gnupg
           - software-properties-common
           - debian-archive-keyring
+          - cron
         state: latest
         update_cache: true
