@@ -1,0 +1,58 @@
+---
+- name: Create runner directory 
+  file: 
+    path: "{{ runner_dir }}"
+    state: directory 
+    mode: '0755'
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+
+- name: Download runner package 
+  get_url: 
+    url: "{{ runner_url }}"
+    dest: "{{ runner_dir }}/actions-runner-linux-x64-{{ runner_version }}.tar.gz"
+
+- name: Validate the hash of the downloaded file
+  command: "shasum -a 256 {{ runner_dir }}/actions-runner-linux-x64-{{ runner_version }}.tar.gz"
+  register: runner_hash_output
+  changed_when: false
+
+- name: Ensure the runner hash matches
+  assert:
+    that:
+      - "{{ runner_hash_output.stdout.split(' ')[0] == runner_hash }}"
+    fail_msg: "The downloaded runner package's hash does not match!"
+
+- name: Extract the runner package
+  unarchive:
+    src: "{{ runner_dir }}/actions-runner-linux-x64-{{ runner_version }}.tar.gz"
+    dest: "{{ runner_dir }}"
+    remote_src: yes
+
+- name: Change ownership of runner directory to non-root user
+  file:
+    path: "{{ runner_dir }}"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    recurse: yes
+
+- name: Ensure permissions for the runner directory
+  file:
+    path: "{{ runner_dir }}"
+    mode: '0755'
+    recurse: yes
+
+- name: Configure the GitHub Actions runner as a non-root user
+  command: "./config.sh --url {{ github_repo_url }} --token {{ github_runner_token }}"
+  args:
+    chdir: "{{ runner_dir }}"
+  become: false  # Run as non-root user
+  ignore_errors: True 
+
+- name: Enable runner service 
+  command: "./svc.sh install"
+  args:
+    chdir: "{{ runner_dir }}"
+
+- name: Start the GitHub Actions runner
+  command: "./svc.sh start"
