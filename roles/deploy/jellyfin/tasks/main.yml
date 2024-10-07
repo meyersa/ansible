@@ -79,7 +79,7 @@
         group: 1000
 
     - name: Find the render group 
-      command: getent group render | cut -d':' -f3
+      shell: getent group render | cut -d':' -f3
       register: render_output
 
     - name: Set render group as fact

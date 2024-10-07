@@ -76,7 +76,7 @@ services:
 
   vpn: 
     profiles: [ glueton, double, finding, vpn, all ]
-    image: qmcgaw/gluetun 
+    image: qmcgaw/gluetun:latest
     container_name: vpn 
     cap_add: 
       - NET_ADMIN 
@@ -84,14 +84,18 @@ services:
       - /dev/net/tun:/dev/net/tun 
     restart: always
     environment:
-      - VPN_SERVICE_PROVIDER=custom
-      - VPN_TYPE=wireguard
+      - VPN_SERVICE_PROVIDER=windscribe
+      - VPN_TYPE=openvpn
       - VPN_ENDPOINT_IP={{ JF_WG_IP }}
       - VPN_ENDPOINT_PORT={{ JF_WG_Port }}
-      - WIREGUARD_PUBLIC_KEY={{ JF_WG_Pub }}
-      - WIREGUARD_PRIVATE_KEY={{ JF_WG_Priv }}
-      - WIREGUARD_PRESHARED_KEY={{ JF_WG_Pre }}
-      - WIREGUARD_ADDRESSES={{ JF_WG_Add }}
+      # - WIREGUARD_PUBLIC_KEY={{ JF_WG_Pub }}
+      # - WIREGUARD_PRIVATE_KEY={{ JF_WG_Priv }}
+      # - WIREGUARD_PRESHARED_KEY={{ JF_WG_Pre }}
+      # - WIREGUARD_ADDRESSES={{ JF_WG_Add }}
+      - OPENVPN_USER={{ JF_OVP_USR }}
+      - OPENVPN_PASSWORD={{ JF_OVP_PASS }}
+      - OPENVPN_CIPHER=aes-256-gcm
+      - FIREWALL_VPN_INPUT_PORTS={{ JF_OVP_PORT }}
       - TZ=Etc/UTC
       - HTTPPROXY=on 
     expose: 
