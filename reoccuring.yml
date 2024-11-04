@@ -1,8 +1,0 @@
----
-- name: Common Reoccuring
-  hosts: all
-  become: true
-  roles: 
-    - reoccuring/common
-
-# TODO: Mikrok8 snap refresh
