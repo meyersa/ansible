@@ -1,0 +1,30 @@
+---
+- name: Update Host
+  tags: ["update"]
+  block:
+    - import_tasks: ../../util/webhook.yml
+      vars: 
+        message: "Updating..."
+        status: "Info"
+
+    - name: Update apt
+      ansible.builtin.apt:
+        name: "*"
+        state: latest
+
+    - name: Upgrade apt
+      ansible.builtin.apt:
+        upgrade: dist
+
+    - import_tasks: ../../util/webhook.yml
+      vars: 
+        message: "Done Updating"
+        status: "Success"
+
+    - import_tasks: ../../util/reboot.yml
+
+  rescue:
+    - import_tasks: ../../util/webhook.yml
+      vars: 
+        message: "Failed to update"
+        status: "Error"
