@@ -1,0 +1,20 @@
+- name: Send Discord Webhook
+  tags: ["webhook"]
+  vars: 
+  block:
+  - name: Send a message to the Discord channel
+    community.general.discord:
+      webhook_id: "{{ DEPLOY_WEBHOOK_ID }}"
+      webhook_token: "{{ DEPLOY_WEBHOOK_TOKEN }}"
+      embeds: [
+              {
+                "title": "[{{ wh_status|upper }}] {{ inventory_hostname }}",
+                "description": "{{ wh_message }}",
+                "color": "{{ 5434975 if status == 'Success' else 5814783 if status == 'Info' else 16734296 }}"
+              }
+            ]
+    vars:
+      wh_message: "{{ message }}"
+      wh_status: "{{ status }}"
+    when: message is defined and status is defined
+    register: webhook_response
