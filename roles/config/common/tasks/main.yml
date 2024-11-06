@@ -1,48 +1,58 @@
-# Create user account
-- import_tasks: access.yml
+- name: Configure host
+  tags: ["config"]
+  block:
+  - import_tasks: ../../../util/webhook.yml
+    vars: 
+      status: "Info"
+      message: "Configuring common..."
 
-# Update host
-- import_tasks: ../../util/update.yml
+  # Create user account
+  - import_tasks: access.yml
 
-# Install Packages
-- import_tasks: apt.yml
+  # Install Packages
+  - import_tasks: apt.yml
 
-- name: Create directory for GPG keys
-  tags: ["keyring"]
-  ansible.builtin.file:
-    path: /etc/apt/keyrings
-    state: directory
-    mode: "0755"
+  - name: Create directory for GPG keys
+    tags: ["keyring"]
+    ansible.builtin.file:
+      path: /etc/apt/keyrings
+      state: directory
+      mode: "0755"
 
-# Set Hostname 
-- import_tasks: hostname.yml
+  # Set Hostname 
+  - import_tasks: hostname.yml
 
-# Set TimeZone
-- import_tasks: timezone.yml
+  # Set TimeZone
+  - import_tasks: timezone.yml
 
-# Configure UFW
-- import_tasks: ufw-basic.yml
+  # Configure UFW
+  - import_tasks: ufw-basic.yml
 
-# Install Crowdsec
-- import_tasks: crowdsec-bouncer.yml
+  # Install Crowdsec
+  - import_tasks: crowdsec-bouncer.yml
 
-# Install Warp
-- import_tasks: warp.yml
+  # Install Warp
+  - import_tasks: warp.yml
 
-# DDNS
-- import_tasks: ddclient.yml 
+  # DDNS
+  - import_tasks: ddclient.yml 
 
-# Configure Monitoring
-- import_tasks: grafana-alloy.yml 
+  # Configure Monitoring
+  - import_tasks: grafana-alloy.yml 
 
-# Disable Swap
-- import_tasks: swap.yml
+  # Disable Swap
+  - import_tasks: swap.yml
 
-# Reboot Host
-- import_tasks: ../../util/reboot.yml
+  # Reboot Host
+  - import_tasks: ../../../util/reboot.yml
 
-- name: Send a message to the Discord channel
-  community.general.discord:
-    webhook_id: "{{ DEPLOY_WEBHOOK_ID }}"
-    webhook_token: "{{ DEPLOY_WEBHOOK_TOKEN }}"
-    content: "Host {{ inventory_hostname }} has been deployed"
+  - import_tasks: ../../../util/webhook.yml
+    vars: 
+      status: "Success"
+      message: "Configured host"
+
+  rescue: 
+    - import_tasks: ../../../util/webhook.yml
+      vars: 
+        status: "Error"
+        message: "Failed to configure common on host"
