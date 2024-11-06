@@ -1,0 +1,26 @@
+- name: Traefik Setup
+  tags: ["traefik"]
+  block: 
+  - name: Copy Config
+    ansible.builtin.template:
+      src: traefik.yml.j2
+      dest: /var/manifests/traefik.yaml
+
+  - name: Apply Traefik
+    kubernetes.core.k8s:
+      kubeconfig: /var/snap/microk8s/current/credentials/client.config
+      src: /var/manifests/traefik.yaml
+
+  - name: Pause for 5 seconds to avoid throttle
+    ansible.builtin.pause:
+      seconds: 5
+
+  - name: Copy Config
+    ansible.builtin.template:
+      src: whoami.yml.j2
+      dest: /var/manifests/whoami.yaml
+
+  - name: Apply Microk8s
+    kubernetes.core.k8s:
+      kubeconfig: /var/snap/microk8s/current/credentials/client.config
+      src: /var/manifests/whoami.yaml
