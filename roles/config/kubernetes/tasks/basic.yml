@@ -1,0 +1,65 @@
+# TODO: Create alias for kubectl as microk8s kubectl 
+
+- name: Basic Microk8s Install Part
+  tags: ["basic"]
+  block:
+    - name: Install MicroK8s
+      community.general.snap:
+        name: microk8s
+        classic: true
+
+    # - name: Install Helm
+    #   community.general.snap:
+    #     name: helm
+    #     classic: true
+
+    - name: Add ansible to MicroK8s group
+      ansible.builtin.user:
+        name: "{{ ansible_user }}"
+        groups: microk8s
+        append: true
+
+    - name: Install Ansible Python dep 
+      apt: 
+        name: 
+          - python3-kubernetes
+
+    - name: Add generic user to MicroK8s group
+      ansible.builtin.user:
+        name: "{{ DEPLOY_USER }}"
+        groups: microk8s
+        append: true
+
+    - name: Add kubectl alias to /etc/bash.bashrc
+      ansible.builtin.lineinfile:
+        path: /etc/bash.bashrc
+        line: 'alias kubectl="sudo microk8s kubectl"'
+        state: present
+
+    # - name: Add helm alias to /etc/bash.bashrc
+    #   ansible.builtin.lineinfile:
+    #     path: /etc/bash.bashrc
+    #     line: 'alias helm="sudo microk8s helm"'
+    #     state: present
+
+    - name: Open UFW Port for K8s
+      community.general.ufw:
+        rule: allow
+        port: "{{ item }}"
+        src: 10.0.0.0/24
+        proto: tcp
+      loop: 
+        - 16443
+        - 12379
+        - 10250
+        - 10255
+        - 10257
+        - 10259
+        - 19001
+        - 4789
+        - 25000
+
+    - name: Create a directory for manifests
+      ansible.builtin.file:
+        path: /var/manifests
+        state: directory

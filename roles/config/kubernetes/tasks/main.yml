@@ -1,45 +1,12 @@
 ---
-- name: Install MicroK8s
-  community.general.snap:
-    name: microk8s
-    classic: true
+# Basic Install Part
+- import_tasks: basic.yml
 
-- name: Add ansible to MicroK8s group
-  ansible.builtin.user:
-    name: "{{ ansible_user }}"
-    groups: microk8s
-    append: true
-
-- name: Add generic user to MicroK8s group
-  ansible.builtin.user:
-    name: "{{ DEPLOY_USER }}"
-    groups: microk8s
-    append: true
-
-- name: Change file ownership, group and permissions
-  ansible.builtin.file:
-    path: "/home/{{ DEPLOY_USER }}/.kube"
-    owner: "{{ DEPLOY_USER }}"
-    group: "{{ DEPLOY_USER }}"
-    state: directory
-    mode: '0755'
-
-- name: Open UFW Port for K8s
-  community.general.ufw:
-    rule: allow
-    port: '25000'
-    src: 100.96.0.0/12
-    proto: tcp
-
-# Configure hosts
-- import_tasks: hosts.yml
-
-# Install Helm
-- import_tasks: helm.yml
-
+# Set the master node
 - name: Set variable for the first host based on the ENVIRONMENT variable
   set_fact:
     first_host: "{{ groups[ENVIRONMENT] | first }}"
+  run_once: true  
 
 - name: Set KUBERNETES_MASTER to true for the first host
   set_fact:
@@ -49,34 +16,17 @@
 - name: Display the first host
   debug:
     msg: "The first host in the {{ ENVIRONMENT }} group is: {{ first_host }}"
-    
+  run_once: true
+
 - name: Setup master node
+  tags: ["master-setup"]
   when: KUBERNETES_MASTER
   block:
-    - name: Open UFW Port for K8 master
-      community.general.ufw:
-        rule: allow
-        port: "{{ item }}"
-        src: 100.96.0.0/12
-        proto: tcp
-      loop: 
-        - 16443
-        - 12379
-        - 10250
-        - 10255
-        - 10257
-        - 10259
-        - 19001
-        - 4789
-
     - name: Enable CIS Hardening 
       command: microk8s enable cis-hardening
 
     - name: Enable community plugins 
       command: microk8s enable community
-
-    - name: Enable Trivy security scans 
-      command: microk8s enable trivy
 
     - name: Add Node Command
       command: microk8s add-node --token-ttl 3600
@@ -84,8 +34,8 @@
 
     - name: Set Join as Fact
       set_fact:
-        join: "{{ join_cluster.stdout_lines[8] }}"
-    
+        join: "{{ join_cluster.stdout_lines[1] }}"
+
     - name: Run kubectl to get the list of nodes
       command: microk8s kubectl get nodes -o json
       register: kubectl_output
@@ -95,7 +45,8 @@
         k8s_node_names: "{{ kubectl_output.stdout | from_json | json_query('items[*].metadata.name') }}"
 
 - name: Join Kubernetes Cluster
-  when: not KUBERNETES_MASTER
+  tags: ["join-cluster"]
+  when: not KUBERNETES_MASTER and hostvars[groups[ENVIRONMENT][0]]['k8s_node_names'] is defined
   block:
   - name: Check if the host is in the k8s node list
     when: not KUBERNETES_MASTER
@@ -104,4 +55,11 @@
 
   - name: Join from command
     when: not is_k8s_node
-    command: "{{ hostvars[groups[ENVIRONMENT][0]]['join'] }}"
+    command: "{{ hostvars[groups[ENVIRONMENT][0]]['join'] }} {{ '--worker' if WORKER is defined else '' }}"
+
+- name: Finish Configuration
+  tags: ["finish-config"]
+  when: KUBERNETES_MASTER
+  block:
+    # Setup Traefik
+    - import_tasks: Traefik.yml
