@@ -1,5 +1,3 @@
-# TODO: Create alias for kubectl as microk8s kubectl 
-
 - name: Basic Microk8s Install Part
   tags: ["basic"]
   block:

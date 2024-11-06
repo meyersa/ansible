@@ -56,10 +56,3 @@
   - name: Join from command
     when: not is_k8s_node
     command: "{{ hostvars[groups[ENVIRONMENT][0]]['join'] }} {{ '--worker' if WORKER is defined else '' }}"
-
-- name: Finish Configuration
-  tags: ["finish-config"]
-  when: KUBERNETES_MASTER
-  block:
-    # Setup Traefik
-    - import_tasks: Traefik.yml
