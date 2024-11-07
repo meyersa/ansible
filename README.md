@@ -1,31 +1,48 @@
 # Ansible
 Automated deployment and management of servers
 
-## Deployment
+Broke up into three parts: configuration, deployment, and maintenance
 
-### All Hosts
-- Apt update/upgrade
-- Install dnsutil/netutil
-- Set datetimectl to America/Detroit
-- Install Crowdsec bouncer
-- Configure monitoring agent
-- DDNS Script
+## Configuration 
+- Configure default system tasks 
+    - Warp: For remote access
+    - APT: Basic system packages
+    - Crowdsec: Firewall 
+    - DDClient: Dynamic DNS hostname management
+    - Grafana Allow: Monitoring
+    - OS (Swap, Timezone, Hostname): Basic settings
+    - UFW: Basic firewall
+- Docker setup
+- Kubernetes setup
 
-### If Backups
-- Configure Backups
+## Deployment 
+- Create and manage production applications
+    - TODO: CampusGrows 
+    - TODO: meyersa
+    - TODO: IP
+    - TODO: ShodanETL
+    - TODO: AWSFlask
 
-### If Docker
-- Install Docker
-- Configure watchtower
-- Configure cloudflared
+- Create and manage APIs
+    - TODO: MindMax
 
-### If K8
-- Install Kubernetes
+- Create and manage monitoring applications
+    - TODO: Grafana
+    - TODO: Mimir
+    - TODO: Loki
+    - TODO: UptimeKuma
+    - TODO: Crowdsec
 
-## Management
-- Regular update
-- Regular Backup (Cron?)
-- Push changes
+- Create and manage storage applications 
+    - TODO: MongoDB
+    - TODO: MariaDB
+    - TODO: Ceph/s3
 
-## Problems
-User creation: Depending on the cloud provider some servers are created with username/password + key and others are created with simply username and passwordless sudo. How should this be standardized? Currently the default user will be switched to passwordless sudo using the initial.sh script. 
+## Maintenance 
+- Updating and upgrading OS and packages 
+- Clean up system files and packages 
+- Clean up Docker 
+- TODO: Upgrade Kubernetes 
+- TODO: Backup database 
+- TODO: Clean up Kubernetes 
+- TODO: Rolling reboot
