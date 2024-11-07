@@ -1,0 +1,32 @@
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: secure-ratelimit
+  namespace: default
+spec:
+  rateLimit:
+    average: 100
+    burst: 50
+
+--- 
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: secure-ratelimit
+  namespace: default
+spec:
+  rateLimit:
+    average: 100
+    burst: 50
+
+    secure-headers: 
+      headers: 
+        customResponseHeaders:
+          X-Robots-Tag: noindex,nofollow,nosnippet,noarchive,notranslate,noimageindex
+          server: Traefik
+        SSLForceHost: true
+        STSSeconds: 315360000
+        STSIncludeSubdomains: true
+        STSPreload: true
+        forceSTSHeader: true

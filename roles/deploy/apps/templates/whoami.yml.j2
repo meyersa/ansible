@@ -48,7 +48,7 @@ metadata:
   namespace: default
   annotations:
     cert-manager.io/cluster-issuer: "le-prod"
-    traefik.ingress.kubernetes.io/router.entrypoints: web,websecure 
+    traefik.ingress.kubernetes.io/router.entrypoints: web,websecure,apisecure
 
 spec:
   tls:

@@ -1,0 +1,10 @@
+---
+- name: Copy Config
+  ansible.builtin.template:
+    src: whoami.yml.j2
+    dest: /var/manifests/whoami.yaml
+
+- name: Apply WhoAmI
+  kubernetes.core.k8s:
+    kubeconfig: /var/snap/microk8s/current/credentials/client.config
+    src: /var/manifests/whoami.yaml

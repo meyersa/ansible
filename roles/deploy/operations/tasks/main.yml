@@ -1,0 +1,13 @@
+---
+- name: NameSpace
+  ansible.builtin.set_fact:
+    OPERATIONS_NAMESPACE: operations
+
+- name: Create Operations Namespace
+  kubernetes.core.k8s:
+    kubeconfig: /var/snap/microk8s/current/credentials/client.config
+    name: "{{ OPERATIONS_NAMESPACE }}"
+    kind: Namespace
+    state: present
+
+- import_tasks: traefik.yml
