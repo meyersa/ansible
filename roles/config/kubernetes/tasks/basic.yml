@@ -6,11 +6,6 @@
         name: microk8s
         classic: true
 
-    # - name: Install Helm
-    #   community.general.snap:
-    #     name: helm
-    #     classic: true
-
     - name: Add ansible to MicroK8s group
       ansible.builtin.user:
         name: "{{ ansible_user }}"
@@ -34,13 +29,27 @@
         line: 'alias kubectl="sudo microk8s kubectl"'
         state: present
 
-    # - name: Add helm alias to /etc/bash.bashrc
-    #   ansible.builtin.lineinfile:
-    #     path: /etc/bash.bashrc
-    #     line: 'alias helm="sudo microk8s helm"'
-    #     state: present
+    - name: Allow inbound traffic on vxlan.calico interface
+      ufw:
+        rule: allow
+        interface_in: vxlan.calico
 
-    - name: Open UFW Port for K8s
+    - name: Allow outbound traffic on vxlan.calico interface
+      ufw:
+        rule: allow
+        interface_out: vxlan.calico
+
+    - name: Allow inbound traffic on cali+ interface (using regex for interface names)
+      ufw:
+        rule: allow
+        interface_in: cali+
+
+    - name: Allow outbound traffic on cali+ interface (using regex for interface names)
+      ufw:
+        rule: allow
+        interface_out: cali+
+
+    - name: Open TCP UFW Port for K8s
       community.general.ufw:
         rule: allow
         port: "{{ item }}"
@@ -56,6 +65,13 @@
         - 19001
         - 4789
         - 25000
+
+    - name: Open UDP UFW Port for K8s
+      community.general.ufw:
+        rule: allow
+        port: 4789
+        src: 10.0.0.0/24
+        proto: udp
 
     - name: Create a directory for manifests
       ansible.builtin.file:
