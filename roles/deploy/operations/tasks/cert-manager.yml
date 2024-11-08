@@ -1,0 +1,48 @@
+---
+- name: Cert Manager Setup
+  tags: ["cert-manager"]
+  block: 
+  - name: Download Cert Manager config
+    ansible.builtin.get_url:
+      url: https://github.com/cert-manager/cert-manager/releases/download/v1.16.1/cert-manager.yaml
+      dest: /var/manifests/traefik-cert-manager.yaml
+      force: true 
+
+  - name: Replace namespace (1/2) in traefik-cert-manager.yaml
+    ansible.builtin.replace:
+      path: /var/manifests/traefik-cert-manager.yaml
+      regexp: 'namespace: cert-manager'
+      replace: 'namespace: {{ NAMESPACE }}'
+
+  - name: Replace namespace (2/2) in traefik-cert-manager.yaml
+    ansible.builtin.replace:
+      path: /var/manifests/traefik-cert-manager.yaml
+      regexp: 'cert-manager\/'
+      replace: '{{ NAMESPACE }}/'
+
+  - name: Apply Cert Manager config
+    kubernetes.core.k8s:
+      kubeconfig: /var/snap/microk8s/current/credentials/client.config
+      src: /var/manifests/traefik-cert-manager.yaml
+
+  - name: Remove cert-manager namespace
+    kubernetes.core.k8s:
+      kubeconfig: /var/snap/microk8s/current/credentials/client.config
+      state: absent
+      api_version: v1
+      kind: Namespace
+      name: cert-manager
+
+  - name: Copy Config
+    ansible.builtin.template:
+      src: traefik-cert-manager.yml.j2
+      dest: /var/manifests/traefik-cert-manager-config.yaml
+
+  - name: Apply Cert-Manager issuer
+    kubernetes.core.k8s:
+      kubeconfig: /var/snap/microk8s/current/credentials/client.config
+      src: /var/manifests/traefik-cert-manager-config.yaml
+    register: result
+    until: result.failed == false
+    retries: 5
+    delay: 60

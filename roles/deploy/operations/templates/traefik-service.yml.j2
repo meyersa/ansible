@@ -1,20 +1,94 @@
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: traefik-role
+
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - services
+      - secrets
+      - nodes
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - discovery.k8s.io
+    resources:
+      - endpointslices
+    verbs:
+      - list
+      - watch
+  - apiGroups:
+      - extensions
+      - networking.k8s.io
+    resources:
+      - ingresses
+      - ingressclasses
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - extensions
+      - networking.k8s.io
+    resources:
+      - ingresses/status
+    verbs:
+      - update
+  - apiGroups:
+      - traefik.io
+    resources:
+      - middlewares
+      - middlewaretcps
+      - ingressroutes
+      - traefikservices
+      - ingressroutetcps
+      - ingressrouteudps
+      - tlsoptions
+      - tlsstores
+      - serverstransports
+      - serverstransporttcps
+    verbs:
+      - get
+      - list
+      - watch
+---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  namespace: default
   name: traefik-account
+  namespace: {{ NAMESPACE }}
+
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: traefik-role-binding
+  namespace: {{ NAMESPACE }} 
+
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: traefik-role
+subjects:
+  - kind: ServiceAccount
+    name: traefik-account
+    namespace: {{ NAMESPACE }}
 
 ---
 kind: DaemonSet
 apiVersion: apps/v1
 metadata:
   name: traefik-deployment
-  namespace: default
+  namespace: {{ NAMESPACE }}
   labels:
     app: traefik
 
 spec:
-  replicas: 1
   selector:
     matchLabels:
       app: traefik
@@ -30,6 +104,7 @@ spec:
           args:
             - --api.insecure
             - --providers.kubernetesingress
+            - --providers.kubernetescrd
             - --log.level=DEBUG
             - --ping
             - --accesslog=true
@@ -45,6 +120,7 @@ spec:
             - --entryPoints.web.http.redirections.entryPoint.to=websecure
             - --entryPoints.web.http.redirections.entryPoint.scheme=https
 
+            - --entryPoints.web.http.middlewares=default-secure-headers@kubernetescrd
           ports:
             - name: web
               containerPort: 80

@@ -1,0 +1,69 @@
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: {{ NAME }}
+  labels:
+    app: {{ NAME }}
+  namespace: default 
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ NAME }}
+  template:
+    metadata:
+      labels:
+        app: {{ NAME }}
+    spec:
+      containers:
+        - name: {{ NAME }}
+          image: {{ IMAGE }}
+          ports:
+            - containerPort: {{ PORT }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ NAME }}
+  namespace: default 
+spec:
+  ports:
+    - port: {{ PORT }}
+      targetPort: {{ PORT }}
+  selector:
+    app: {{ NAME }}
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ NAME }}
+  namespace: default
+spec:
+  secretName: {{ NAME }}-tls
+  dnsNames:
+    - "{{ DOMAIN }}"
+  issuerRef:
+    name: le-prod
+    kind: ClusterIssuer
+
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ NAME }}-ingress
+  namespace: default
+spec:
+  entrypoints: 
+    - web
+    - websecure
+  routes:
+  - match: Host(`{{ DOMAIN }}`)
+    kind: Rule
+    services:
+    - name: {{ NAME }}
+      port: {{ PORT }}
+  tls:
+    secretName: {{ NAME }}-tls

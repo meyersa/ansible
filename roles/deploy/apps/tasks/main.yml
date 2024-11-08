@@ -1,10 +1,31 @@
 ---
 - name: Copy Config
   ansible.builtin.template:
-    src: whoami.yml.j2
+    src: web-app.yml.j2
     dest: /var/manifests/whoami.yaml
+  vars:
+    NAME: whoami
+    PORT: 80
+    DOMAIN: lb.meyerstk.com
+    IMAGE: containous/whoami
 
 - name: Apply WhoAmI
   kubernetes.core.k8s:
     kubeconfig: /var/snap/microk8s/current/credentials/client.config
     src: /var/manifests/whoami.yaml
+  
+- name: Copy Config
+  ansible.builtin.template:
+    src: web-app.yml.j2
+    dest: /var/manifests/meyersa.yaml
+  vars:
+    NAME: meyersa
+    PORT: 3000
+    DOMAIN: meyersa.meyerstk.com
+    IMAGE: ghcr.io/meyersa/new-web:latest
+
+- name: Apply WhoAmI
+  kubernetes.core.k8s:
+    kubeconfig: /var/snap/microk8s/current/credentials/client.config
+    src: /var/manifests/meyersa.yaml
+  

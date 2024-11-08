@@ -1,39 +1,21 @@
 ---
-- name: Cert Manager Setup
-  tags: ["cert-manager"]
-  block: 
-  - name: Download config
-    ansible.builtin.get_url:
-      url: https://github.com/cert-manager/cert-manager/releases/download/v1.16.1/cert-manager.yaml
-      dest: /var/manifests/traefik-cert-manager.yaml
-      force: true 
-
-  - name: Apply Cert-Manager config
-    kubernetes.core.k8s:
-      kubeconfig: /var/snap/microk8s/current/credentials/client.config
-      src: /var/manifests/traefik-cert-manager.yaml
-      namespace: "{{ OPERATIONS_NAMESPACE }}"
-
-  - name: Pause for 60 seconds to wait for webhook to come online
-    ansible.builtin.pause:
-      seconds: 60
-
-  - name: Copy Config
-    ansible.builtin.template:
-      src: traefik-cert-manager.yml.j2
-      dest: /var/manifests/traefik-cert-manager-config.yaml
-
-  - name: Apply Cert-Manager issuer
-    kubernetes.core.k8s:
-      kubeconfig: /var/snap/microk8s/current/credentials/client.config
-      src: /var/manifests/traefik-cert-manager-config.yaml
-      namespace: "{{ OPERATIONS_NAMESPACE }}"
-
 - name: Traefik Setup
   tags: ["traefik"]
   when: KUBERNETES_MASTER is true
   block: 
-  
+  # CRD 
+  - name: Download Traefik CRD
+    ansible.builtin.get_url:
+      url: https://raw.githubusercontent.com/traefik/traefik/v3.2/docs/content/reference/dynamic-configuration/kubernetes-crd-definition-v1.yml
+      dest: /var/manifests/traefik-crd.yaml
+      force: true 
+
+  - name: Apply Traefik CRD
+    kubernetes.core.k8s:
+      kubeconfig: /var/snap/microk8s/current/credentials/client.config
+      src: /var/manifests/traefik-crd.yaml
+      namespace: "{{ NAMESPACE }}"
+
   # RBAC
   - name: Download Traefik RBAC
     ansible.builtin.get_url:
@@ -41,35 +23,46 @@
       dest: /var/manifests/traefik-rbac.yaml
       force: true 
 
+  - name: Replace namespace in traefik-rbac.yaml
+    ansible.builtin.replace:
+      path: /var/manifests/traefik-rbac.yaml
+      regexp: 'namespace: [a-z-]+'
+      replace: 'namespace: {{ NAMESPACE }}'
+
   - name: Apply Traefik RBAC
     kubernetes.core.k8s:
       kubeconfig: /var/snap/microk8s/current/credentials/client.config
       src: /var/manifests/traefik-rbac.yaml
-      namespace: "{{ OPERATIONS_NAMESPACE }}"
 
   # Pre-Service
-  # Middleware stuff here 
+  - name: Copy Traefik Middleware
+    ansible.builtin.template:
+      src: traefik-middleware.yml.j2
+      dest: /var/manifests/traefik-middleware.yaml
+  
+  - name: Apply Traefik Middleware
+    kubernetes.core.k8s:
+      kubeconfig: /var/snap/microk8s/current/credentials/client.config
+      src: /var/manifests/traefik-rbac.yaml
 
   # Service 
   - name: Copy Traefik Service
     ansible.builtin.template:
       src: traefik-service.yml.j2
       dest: /var/manifests/traefik-service.yaml
-  
+
   - name: Apply Traefik Service
     kubernetes.core.k8s:
       kubeconfig: /var/snap/microk8s/current/credentials/client.config
       src: /var/manifests/traefik-service.yaml
-      namespace: "{{ OPERATIONS_NAMESPACE }}"
-
+  
   # Post-Service 
   - name: Copy Ingress Config
     ansible.builtin.template:
       src: traefik-ingress.yml.j2
       dest: /var/manifests/traefik-ingress.yaml
-  
+
   - name: Apply Ingress Config
     kubernetes.core.k8s:
       kubeconfig: /var/snap/microk8s/current/credentials/client.config
       src: /var/manifests/traefik-ingress.yaml
-      namespace: "{{ OPERATIONS_NAMESPACE }}"
