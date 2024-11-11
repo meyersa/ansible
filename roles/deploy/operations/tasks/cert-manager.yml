@@ -2,46 +2,39 @@
 - name: Cert Manager Setup
   tags: ["cert-manager"]
   block: 
-  - name: Download Cert Manager config
+  - name: Download Cert-Manager CRDs
     ansible.builtin.get_url:
-      url: https://github.com/cert-manager/cert-manager/releases/download/v1.16.1/cert-manager.yaml
-      dest: /var/manifests/traefik-cert-manager.yaml
+      url: https://github.com/cert-manager/cert-manager/releases/download/v1.16.1/cert-manager.crds.yaml
+      dest: /var/manifests/cert-manager-crd.yaml
       force: true 
 
-  - name: Replace namespace (1/2) in traefik-cert-manager.yaml
-    ansible.builtin.replace:
-      path: /var/manifests/traefik-cert-manager.yaml
-      regexp: 'namespace: cert-manager'
-      replace: 'namespace: {{ NAMESPACE }}'
-
-  - name: Replace namespace (2/2) in traefik-cert-manager.yaml
-    ansible.builtin.replace:
-      path: /var/manifests/traefik-cert-manager.yaml
-      regexp: 'cert-manager\/'
-      replace: '{{ NAMESPACE }}/'
-
-  - name: Apply Cert Manager config
+  - name: Apply Cert-Manager CRDs
     kubernetes.core.k8s:
       kubeconfig: /var/snap/microk8s/current/credentials/client.config
-      src: /var/manifests/traefik-cert-manager.yaml
+      src: /var/manifests/cert-manager-crd.yaml
 
-  - name: Remove cert-manager namespace
-    kubernetes.core.k8s:
-      kubeconfig: /var/snap/microk8s/current/credentials/client.config
-      state: absent
-      api_version: v1
-      kind: Namespace
+  - name: Add jetstack chart repo
+    kubernetes.core.helm_repository:
+      name: jetstack
+      repo_url: https://charts.jetstack.io
+
+  - name: Deploy Cert-Manager helm chart
+    kubernetes.core.helm:
       name: cert-manager
+      chart_ref: jetstack/cert-manager
+      release_namespace: "{{ NAMESPACE }}"
+    environment: 
+      KUBECONFIG: /var/snap/microk8s/current/credentials/client.config
 
-  - name: Copy Config
+  - name: Copy Cert-Manager Config
     ansible.builtin.template:
-      src: traefik-cert-manager.yml.j2
-      dest: /var/manifests/traefik-cert-manager-config.yaml
+      src: cert-manager.yml.j2
+      dest: /var/manifests/cert-manager-config.yaml
 
-  - name: Apply Cert-Manager issuer
+  - name: Apply Cert-Manager Config
     kubernetes.core.k8s:
       kubeconfig: /var/snap/microk8s/current/credentials/client.config
-      src: /var/manifests/traefik-cert-manager-config.yaml
+      src: /var/manifests/cert-manager-config.yaml
     register: result
     until: result.failed == false
     retries: 5

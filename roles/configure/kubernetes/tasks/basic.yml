@@ -6,6 +6,11 @@
         name: microk8s
         classic: true
 
+    - name: Install MicroK8s
+      community.general.snap:
+        name: helm
+        classic: true
+
     - name: Add ansible to MicroK8s group
       ansible.builtin.user:
         name: "{{ ansible_user }}"
