@@ -28,11 +28,16 @@ Broke up into three parts: configuration, deployment, and maintenance
 
 - Create and manage monitoring applications
     - TODO: Grafana
+        - TODO: Automatically create dashboard for host
     - TODO: Mimir
     - TODO: Loki
     - TODO: UptimeKuma
+        - TODO: Automatically add hosts when website is added/removed
+    
+- Create and manage operational applications 
+    - Traefik
     - TODO: Crowdsec
-
+    
 - Create and manage storage applications 
     - TODO: MongoDB
     - TODO: MariaDB
@@ -44,5 +49,5 @@ Broke up into three parts: configuration, deployment, and maintenance
 - Clean up Docker 
 - TODO: Upgrade Kubernetes 
 - TODO: Backup database 
-- TODO: Clean up Kubernetes 
+- TODO: Clean up Kubernetes (& containers)
 - TODO: Rolling reboot
