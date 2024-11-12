@@ -5,11 +5,23 @@
 
 - name: Create Operations Namespace
   kubernetes.core.k8s:
-    kubeconfig: /var/snap/microk8s/current/credentials/client.config
+    kubeconfig: /etc/rancher/k3s/k3s.yaml
     name: "{{ NAMESPACE }}"
     kind: Namespace
     state: present
+  register: output 
+  until: output.failed == false
+  retries: 10
+  delay: 60
 
 - import_tasks: cert-manager.yml
+  register: output 
+  until: output.failed == false
+  retries: 10
+  delay: 60
 
 - import_tasks: traefik.yml
+  register: output 
+  until: output.failed == false
+  retries: 10
+  delay: 60

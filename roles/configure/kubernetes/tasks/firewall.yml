@@ -1,0 +1,35 @@
+- name: Kubernetes Firewall
+  tags: ["kubernetes-firewall"]
+  block:
+    - name: Pod traffic
+      ansible.builtin.ufw:
+        rule: allow
+        from_ip: 10.42.0.0/16
+
+    - name: Service traffic
+      ansible.builtin.ufw:
+        rule: allow
+        from_ip: 10.43.0.0/16
+
+    - name: Open TCP UFW Port for K8s
+      community.general.ufw:
+        rule: allow
+        port: "{{ item }}"
+        src: 10.0.0.0/24
+        proto: tcp
+      loop: 
+        - 6443
+        - 2379
+        - 2380
+        - 10250
+        - 5001
+
+    - name: Open UDP UFW Port for K8s
+      community.general.ufw:
+        rule: allow
+        port: "{{ item }}"
+        src: 10.0.0.0/24
+        proto: udp
+      loop: 
+        - 8472
+        - 51820

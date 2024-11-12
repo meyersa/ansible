@@ -14,7 +14,7 @@ metadata:
   name: le-prod
 spec:
   acme:
-    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    server: {{ ACME_ADDRESS }}
     email: {{ TLS_EMAIL }}
     privateKeySecretRef:
       name: le-prod-key

@@ -3,38 +3,25 @@
   tags: ["traefik"]
   when: KUBERNETES_MASTER is true
   block: 
-  # CRD 
-  - name: Download Traefik CRD
-    ansible.builtin.get_url:
-      url: https://raw.githubusercontent.com/traefik/traefik/v3.2/docs/content/reference/dynamic-configuration/kubernetes-crd-definition-v1.yml
-      dest: /var/manifests/traefik-crd.yaml
-      force: true 
+  - name: Add Traefik chart repo
+    kubernetes.core.helm_repository:
+      name: traefik
+      repo_url: https://traefik.github.io/charts
 
-  - name: Apply Traefik CRD
-    kubernetes.core.k8s:
-      kubeconfig: /var/snap/microk8s/current/credentials/client.config
-      src: /var/manifests/traefik-crd.yaml
-      namespace: "{{ NAMESPACE }}"
+  - name: Copy Traefik Values
+    ansible.builtin.template:
+      src: traefik-values.yml.j2
+      dest: /var/manifests/traefik-values.yaml
 
-  # RBAC
-  - name: Download Traefik RBAC
-    ansible.builtin.get_url:
-      url: https://raw.githubusercontent.com/traefik/traefik/v3.2/docs/content/reference/dynamic-configuration/kubernetes-crd-rbac.yml
-      dest: /var/manifests/traefik-rbac.yaml
-      force: true 
-
-  - name: Replace namespace in traefik-rbac.yaml
-    ansible.builtin.replace:
-      path: /var/manifests/traefik-rbac.yaml
-      regexp: 'namespace: [a-z-]+'
-      replace: 'namespace: {{ NAMESPACE }}'
-
-  - name: Apply Traefik RBAC
-    kubernetes.core.k8s:
-      kubeconfig: /var/snap/microk8s/current/credentials/client.config
-      src: /var/manifests/traefik-rbac.yaml
-
-  # Pre-Service
+  - name: Deploy Traefik helm chart
+    kubernetes.core.helm:
+      name: traefik
+      chart_ref: traefik/traefik
+      release_namespace: "{{ NAMESPACE }}"
+      values_files: /var/manifests/traefik-values.yaml
+    environment: 
+      KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+    
   - name: Copy Traefik Middleware
     ansible.builtin.template:
       src: traefik-middleware.yml.j2
@@ -42,27 +29,5 @@
   
   - name: Apply Traefik Middleware
     kubernetes.core.k8s:
-      kubeconfig: /var/snap/microk8s/current/credentials/client.config
-      src: /var/manifests/traefik-rbac.yaml
-
-  # Service 
-  - name: Copy Traefik Service
-    ansible.builtin.template:
-      src: traefik-service.yml.j2
-      dest: /var/manifests/traefik-service.yaml
-
-  - name: Apply Traefik Service
-    kubernetes.core.k8s:
-      kubeconfig: /var/snap/microk8s/current/credentials/client.config
-      src: /var/manifests/traefik-service.yaml
-  
-  # Post-Service 
-  - name: Copy Ingress Config
-    ansible.builtin.template:
-      src: traefik-ingress.yml.j2
-      dest: /var/manifests/traefik-ingress.yaml
-
-  - name: Apply Ingress Config
-    kubernetes.core.k8s:
-      kubeconfig: /var/snap/microk8s/current/credentials/client.config
-      src: /var/manifests/traefik-ingress.yaml
+      kubeconfig: /etc/rancher/k3s/k3s.yaml
+      src: /var/manifests/traefik-middleware.yaml

@@ -2,7 +2,7 @@
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
-  name: secure-ratelimit
+  name: web-ratelimit
   namespace: {{ NAMESPACE }}
 spec:
   rateLimit:
@@ -13,7 +13,7 @@ spec:
 apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
-  name: secure-headers
+  name: headers
   namespace: {{ NAMESPACE }}
 spec:
   headers: 
@@ -25,3 +25,12 @@ spec:
     STSIncludeSubdomains: true
     STSPreload: true
     forceSTSHeader: true
+  
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: compress
+  namespace: {{ NAMESPACE }}
+spec:
+  compress: {}

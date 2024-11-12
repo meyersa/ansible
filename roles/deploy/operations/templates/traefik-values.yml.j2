@@ -1,0 +1,72 @@
+globalArguments:
+- "--global.checknewversion"
+
+args:
+  - --api.insecure
+  - --ping
+
+logs: 
+  general:
+    level: "DEBUG"
+  access: 
+    enabled: true 
+
+ingressRoute: 
+  dashboard: 
+    enabled: true 
+
+ports:
+  web:
+    port: 80
+    asDefault: true
+    nodePort: 30080
+    expose:
+      default: true
+    exposedPort: 30080
+    redirectTo: 
+        port: websecure
+    forwardedHeaders: 
+        trustedIPs: 
+            - 10.0.0.0/8
+    middlewares:
+        - {{ NAMESPACE }}-headers@kubernetescrd
+        - {{ NAMESPACE }}-web-ratelimit@kubernetescrd
+        - {{ NAMESPACE }}-compress@kubernetescrd
+
+  websecure:
+    port: 443
+    asDefault: true
+    nodePort: 30443
+    expose:
+      default: true
+    exposedPort: 30443
+    tls: 
+        enabled: true
+    forwardedHeaders: 
+        trustedIPs: 
+            - 10.0.0.0/8
+    middlewares:
+        - {{ NAMESPACE }}-headers@kubernetescrd
+        - {{ NAMESPACE }}-web-ratelimit@kubernetescrd
+        - {{ NAMESPACE }}-compress@kubernetescrd
+
+  apisecure:
+    port: 8443
+    nodePort: 30444
+    expose:
+      default: true
+    exposedPort: 30444
+    tls: 
+        enabled: true
+    forwardedHeaders: 
+        trustedIPs: 
+            - 10.0.0.0/8
+    middlewares:
+        - {{ NAMESPACE }}-headers@kubernetescrd
+
+  traefik:
+    port: 8080
+    nodePort: 30081
+    expose:
+      default: true
+    exposedPort: 30081
