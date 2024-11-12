@@ -31,21 +31,22 @@
         KUBERNETES_MASTER: "true"
       when: inventory_hostname == first_host
 
-    - name: Display the first host
-      debug:
-        msg: "The first host in the {{ ENVIRONMENT }} group is: {{ first_host }}"
-      when: inventory_hostname == first_host
+    - name: Set Join IP
+      set_fact: 
+        KUBERNETES_IP: "{{ ansible_default_ipv4.address }}"
+      when: KUBERNETES_MASTER
+
+    - name: Copy K3s Config
+      ansible.builtin.template:
+        src: k3s-values.yml.j2
+        dest: /etc/rancher/k3s/config.yaml
 
 - name: Setup master node
   tags: ["master-setup"]
   when: KUBERNETES_MASTER
   block:
-    - name: Set Join IP for the first host 
-      set_fact: 
-        KUBERNETES_IP: "{{ ansible_default_ipv4.address }}"
-        
     - name: Install as Master
-      command: sh /tmp/k3s-install.sh server --cluster-init --tls-san={{ KUBERNETES_IP }} --disable=traefik
+      command: sh /tmp/k3s-install.sh server
       environment: 
         K3S_TOKEN: "{{ K3S_TOKEN }}"
 
@@ -54,6 +55,6 @@
   when: not KUBERNETES_MASTER
   block:
     - name: Install as Agent
-      command: sh /tmp/k3s-install.sh server --cluster-init --server https://{{ hostvars[groups[ENVIRONMENT][0]]['KUBERNETES_IP'] }}:6443 --tls-san={{ hostvars[groups[ENVIRONMENT][0]]['KUBERNETES_IP'] }} --disable=traefik --disable=servicelb 
+      command: sh /tmp/k3s-install.sh server --server https://{{ hostvars[groups[ENVIRONMENT][0]]['KUBERNETES_IP'] }}:6443
       environment: 
         K3S_TOKEN: "{{ K3S_TOKEN }}"

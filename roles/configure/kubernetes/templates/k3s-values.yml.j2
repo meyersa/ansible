@@ -1,0 +1,6 @@
+write-kubeconfig-mode: "0644"
+cluster-init: true
+tls-san:
+  - "{{ hostvars[groups[ENVIRONMENT][0]]['KUBERNETES_IP'] }}"
+disable: 
+  - traefik
