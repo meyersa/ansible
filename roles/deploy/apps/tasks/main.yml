@@ -11,7 +11,7 @@
 
 - name: Apply WhoAmI
   kubernetes.core.k8s:
-    kubeconfig: /var/snap/microk8s/current/credentials/client.config
+    kubeconfig: /etc/rancher/k3s/k3s.yaml
     src: /var/manifests/whoami.yaml
   
 - name: Copy Config
@@ -26,6 +26,6 @@
 
 - name: Apply WhoAmI
   kubernetes.core.k8s:
-    kubeconfig: /var/snap/microk8s/current/credentials/client.config
+    kubeconfig: /etc/rancher/k3s/k3s.yaml
     src: /var/manifests/meyersa.yaml
   

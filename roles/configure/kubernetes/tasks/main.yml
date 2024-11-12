@@ -1,58 +1,59 @@
----
-# Basic Install Part
-- import_tasks: basic.yml
+- name: Setup k3s 
+  tags: ["k3s-setup"]
+  block: 
+    - import_tasks: helm.yml 
 
-# Set the master node
-- name: Set variable for the first host based on the ENVIRONMENT variable
-  set_fact:
-    first_host: "{{ groups[ENVIRONMENT] | first }}"
-  run_once: true  
+    - import_tasks: firewall.yml 
 
-- name: Set KUBERNETES_MASTER to true for the first host
-  set_fact:
-    KUBERNETES_MASTER: "true"
-  when: inventory_hostname == first_host
+    - name: Install Ansible Python dep 
+      apt: 
+        name: 
+          - python3-kubernetes
 
-- name: Display the first host
-  debug:
-    msg: "The first host in the {{ ENVIRONMENT }} group is: {{ first_host }}"
-  run_once: true
+    - name: Download k3s install script
+      ansible.builtin.get_url:
+        url: https://get.k3s.io
+        dest: /tmp/k3s-install.sh
+
+    - name: Create a directory for manifests
+      ansible.builtin.file:
+        path: /var/manifests
+        state: directory
+
+    # Set the master node
+    - name: Set variable for the first host based on the ENVIRONMENT variable
+      set_fact:
+        first_host: "{{ groups[ENVIRONMENT] | first }}"
+      run_once: true  
+
+    - name: Set KUBERNETES_MASTER to true for the first host
+      set_fact:
+        KUBERNETES_MASTER: "true"
+      when: inventory_hostname == first_host
+
+    - name: Display the first host
+      debug:
+        msg: "The first host in the {{ ENVIRONMENT }} group is: {{ first_host }}"
+      when: inventory_hostname == first_host
 
 - name: Setup master node
   tags: ["master-setup"]
   when: KUBERNETES_MASTER
   block:
-    - name: Enable CIS Hardening 
-      command: microk8s enable cis-hardening
+    - name: Set Join IP for the first host 
+      set_fact: 
+        KUBERNETES_IP: "{{ ansible_default_ipv4.address }}"
+        
+    - name: Install as Master
+      command: sh /tmp/k3s-install.sh server --cluster-init --tls-san={{ KUBERNETES_IP }} --disable=traefik
+      environment: 
+        K3S_TOKEN: "{{ K3S_TOKEN }}"
 
-    - name: Enable community plugins 
-      command: microk8s enable community
-
-    - name: Add Node Command
-      command: microk8s add-node --token-ttl 3600
-      register: join_cluster
-
-    - name: Set Join as Fact
-      set_fact:
-        join: "{{ join_cluster.stdout_lines[1] }}"
-
-    - name: Run kubectl to get the list of nodes
-      command: microk8s kubectl get nodes -o json
-      register: kubectl_output
-
-    - name: Parse the list of nodes to get hostnames
-      set_fact:
-        k8s_node_names: "{{ kubectl_output.stdout | from_json | json_query('items[*].metadata.name') }}"
-
-- name: Join Kubernetes Cluster
-  tags: ["join-cluster"]
-  when: not KUBERNETES_MASTER and hostvars[groups[ENVIRONMENT][0]]['k8s_node_names'] is defined
+- name: Setup agent node 
+  tags: ["agent-setup"]
+  when: not KUBERNETES_MASTER
   block:
-  - name: Check if the host is in the k8s node list
-    when: not KUBERNETES_MASTER
-    set_fact:
-      is_k8s_node: "{{ inventory_hostname in hostvars[groups[ENVIRONMENT][0]]['k8s_node_names'] }}"
-
-  - name: Join from command
-    when: not is_k8s_node
-    command: "{{ hostvars[groups[ENVIRONMENT][0]]['join'] }} {{ '--worker' if WORKER is defined else '' }}"
+    - name: Install as Agent
+      command: sh /tmp/k3s-install.sh server --cluster-init --server https://{{ hostvars[groups[ENVIRONMENT][0]]['KUBERNETES_IP'] }}:6443 --tls-san={{ hostvars[groups[ENVIRONMENT][0]]['KUBERNETES_IP'] }} --disable=traefik --disable=servicelb 
+      environment: 
+        K3S_TOKEN: "{{ K3S_TOKEN }}"
