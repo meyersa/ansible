@@ -18,13 +18,11 @@ Broke up into three parts: configuration, deployment, and maintenance
 ## Deployment 
 - Create and manage production applications
     - TODO: CampusGrows 
-    - TODO: meyersa
+    - meyersa
     - TODO: IP
     - TODO: ShodanETL
     - TODO: AWSFlask
-
-- Create and manage APIs
-    - TODO: MindMax
+    - MindMax
 
 - Create and manage monitoring applications
     - TODO: Grafana
