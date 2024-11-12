@@ -1,31 +1,22 @@
 ---
-- name: Copy Config
-  ansible.builtin.template:
-    src: web-app.yml.j2
-    dest: /var/manifests/whoami.yaml
+- import_tasks: deploy-app.yml
   vars:
     NAME: whoami
     PORT: 80
     DOMAIN: lb.meyerstk.com
     IMAGE: containous/whoami
 
-- name: Apply WhoAmI
-  kubernetes.core.k8s:
-    kubeconfig: "{{ KUBECONFIG }}"
-    src: /var/manifests/whoami.yaml
-  
-- name: Copy Config
-  ansible.builtin.template:
-    src: web-app.yml.j2
-    dest: /var/manifests/meyersa.yaml
+- import_tasks: deploy-app.yml
   vars:
     NAME: meyersa
     PORT: 3000
     DOMAIN: meyersa.meyerstk.com
     IMAGE: ghcr.io/meyersa/new-web:latest
 
-- name: Apply WhoAmI
-  kubernetes.core.k8s:
-    kubeconfig: "{{ KUBECONFIG }}"
-    src: /var/manifests/meyersa.yaml
-  
+- import_tasks: deploy-app.yml
+  vars:
+    NAME: dmaxmind
+    PORT: 8080
+    DOMAIN: dmaxmind.meyerstk.com
+    IMAGE: observabilitystack/geoip-api      
+    API: true

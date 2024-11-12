@@ -21,6 +21,13 @@ spec:
           image: {{ IMAGE }}
           ports:
             - containerPort: {{ PORT }}
+          env:
+            {% if ENV_VARS is defined %}
+            {% for key, value in ENV_VARS.items() %}
+            - name: "{{ key }}"
+              value: "{{ value }}"
+            {% endfor %}
+            {% endif %}
 
 ---
 apiVersion: v1
@@ -56,9 +63,10 @@ metadata:
   name: {{ NAME }}-ingress
   namespace: default
 spec:
-  entrypoints: 
-    - web
-    - websecure
+  {% if API is defined -%}
+  entryPoints: 
+    - apisecure
+  {% endif -%}
   routes:
   - match: Host(`{{ DOMAIN }}`)
     kind: Rule
