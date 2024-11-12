@@ -1,27 +1,20 @@
 ---
-- name: NameSpace
-  ansible.builtin.set_fact:
-    NAMESPACE: operations
+- name: Operations Deployment
+  tags: ["operations"]
+  block: 
+  - name: NameSpace
+    ansible.builtin.set_fact:
+      NAMESPACE: operations
 
-- name: Create Operations Namespace
-  kubernetes.core.k8s:
-    kubeconfig: "{{ KUBECONFIG }}"
-    name: "{{ NAMESPACE }}"
-    kind: Namespace
-    state: present
-  register: output 
-  until: output.failed == false
-  retries: 10
-  delay: 60
+  - name: Create Operations Namespace
+    kubernetes.core.k8s:
+      kubeconfig: "{{ KUBECONFIG }}"
+      name: "{{ NAMESPACE }}"
+      kind: Namespace
+      state: present
 
-- import_tasks: cert-manager.yml
-  register: output 
-  until: output.failed == false
-  retries: 10
-  delay: 60
+  - import_tasks: cert-manager.yml
 
-- import_tasks: traefik.yml
-  register: output 
-  until: output.failed == false
-  retries: 10
-  delay: 60
+  - import_tasks: traefik.yml
+
+  - import_tasks: longhorn.yml
