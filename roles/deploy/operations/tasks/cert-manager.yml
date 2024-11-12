@@ -10,7 +10,7 @@
 
   - name: Apply Cert-Manager CRDs
     kubernetes.core.k8s:
-      kubeconfig: /etc/rancher/k3s/k3s.yaml
+      kubeconfig: "{{ KUBECONFIG }}"
       src: /var/manifests/cert-manager-crd.yaml
 
   - name: Add jetstack chart repo
@@ -24,7 +24,7 @@
       chart_ref: jetstack/cert-manager
       release_namespace: "{{ NAMESPACE }}"
     environment: 
-      KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+      KUBECONFIG: "{{ KUBECONFIG }}"
 
   - name: Copy Cert-Manager Config
     ansible.builtin.template:
@@ -33,7 +33,7 @@
 
   - name: Apply Cert-Manager Config
     kubernetes.core.k8s:
-      kubeconfig: /etc/rancher/k3s/k3s.yaml
+      kubeconfig: "{{ KUBECONFIG }}"
       src: /var/manifests/cert-manager-config.yaml
     register: result
     until: result.failed == false

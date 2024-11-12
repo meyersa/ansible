@@ -5,7 +5,7 @@
 
 - name: Create Operations Namespace
   kubernetes.core.k8s:
-    kubeconfig: /etc/rancher/k3s/k3s.yaml
+    kubeconfig: "{{ KUBECONFIG }}"
     name: "{{ NAMESPACE }}"
     kind: Namespace
     state: present

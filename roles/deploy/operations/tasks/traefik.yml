@@ -20,7 +20,7 @@
       release_namespace: "{{ NAMESPACE }}"
       values_files: /var/manifests/traefik-values.yaml
     environment: 
-      KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+      KUBECONFIG: "{{ KUBECONFIG }}"
     
   - name: Copy Traefik Middleware
     ansible.builtin.template:
@@ -29,5 +29,5 @@
   
   - name: Apply Traefik Middleware
     kubernetes.core.k8s:
-      kubeconfig: /etc/rancher/k3s/k3s.yaml
+      kubeconfig: "{{ KUBECONFIG }}"
       src: /var/manifests/traefik-middleware.yaml
