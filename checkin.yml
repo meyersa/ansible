@@ -1,0 +1,9 @@
+---
+- name: Jellyfin Install
+  hosts: prod
+  become: true
+  vars: 
+  roles: 
+    - maintenance/update
+    - configure/common
+    - maintenance/clean

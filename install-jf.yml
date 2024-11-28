@@ -1,0 +1,10 @@
+---
+- name: Jellyfin Install
+  hosts: jellyfin
+  become: true
+  vars: 
+  roles: 
+    - maintenance/update
+    - configure/common
+    - misc/jellyfin
+    - maintenance/clean
