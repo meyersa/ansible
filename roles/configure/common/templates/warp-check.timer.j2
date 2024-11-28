@@ -1,0 +1,10 @@
+[Unit]
+Description=Run WARP CLI status check periodically
+
+[Timer]
+OnBootSec=5min       # Start 5 minutes after boot
+OnUnitActiveSec=5min # Repeat every 5 minutes after the first run
+Unit=warp-check.service
+
+[Install]
+WantedBy=timers.target
