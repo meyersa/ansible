@@ -1,2 +1,4 @@
 # Only for local testing - for now
 inventory.yml
+
+.DS_Store
