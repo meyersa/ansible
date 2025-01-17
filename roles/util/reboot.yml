@@ -3,7 +3,7 @@
   tags: ["reboot"]
   throttle: 1
   block:
-    - import_tasks: webhook.yml
+    - import_tasks: roles/util/webhook.yml
       vars: 
         message: "Rebooting..."
         status: "Info"
@@ -21,13 +21,13 @@
         delay: 10
         timeout: 300
 
-    - import_tasks: webhook.yml
+    - import_tasks: roles/util/webhook.yml
       vars: 
         message: "Back online"
         status: "Success"
 
   rescue:
-    - import_tasks: webhook.yml
+    - import_tasks: roles/util/webhook.yml
       vars: 
         message: "Failed to reboot"
         status: "Error"
