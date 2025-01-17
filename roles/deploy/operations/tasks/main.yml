@@ -17,4 +17,6 @@
 
   - import_tasks: traefik.yml
 
+  - import_tasks: cloudflared.yml
+
   - import_tasks: longhorn.yml
