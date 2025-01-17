@@ -1,11 +1,11 @@
-# ddclient.conf
-#
+# Common settings
 ssl=yes
 daemon=5m
-use=web, web=https://icanhazip.com/, web-skip='\\n\\n'
+
+{{ DD_USE }}
 protocol=cloudflare, \
 zone={{ DDCLIENT_ZONE }}, \
 ttl=1, \
 login={{ DDCLIENT_EMAIL }}, \
 password={{ DDCLIENT_CF_GLOBAL_TOKEN }} \
-{{ DDCLIENT_HOSTNAME }}.{{ DDCLIENT_ZONE }}
+{{ DD_HOSTNAME }}.{{ DDCLIENT_ZONE }}
