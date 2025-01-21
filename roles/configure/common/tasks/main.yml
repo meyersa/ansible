@@ -45,6 +45,7 @@
 
   # Reboot Host
   - import_tasks: ../../../util/reboot.yml
+    when: reboot is defined and reboot
 
   - import_tasks: ../../../util/webhook.yml
     vars: 

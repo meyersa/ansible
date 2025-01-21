@@ -23,7 +23,8 @@
         status: "Success"
 
     - import_tasks: ../../util/reboot.yml
-
+      when: reboot is defined and reboot
+      
   rescue:
     - import_tasks: ../../util/webhook.yml
       vars: 
