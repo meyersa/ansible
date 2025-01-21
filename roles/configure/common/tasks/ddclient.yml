@@ -6,7 +6,8 @@
       set_fact: 
         DDCLIENT_HOSTNAME: "{{ ansible_hostname[:2] }}"
         DDCLIENT_PUB_USE: "use=web, web=https://icanhazip.com/, web-skip='\\\\n\\\\n'"
-        DDCLIENT_WARP_USE: "use=cmd, cmd=\"ip a | grep '100\\.' | awk '{print \\$2}' | cut -d/ -f1\""
+        # Need it to end up being three backslashes for it to grep the right IP
+        DDCLIENT_WARP_USE: "use=cmd, cmd=\"ip a | grep '100\\\\\\.' | awk '{print $2}' | cut -d/ -f1\""
 
     - name: Install ddclient 
       ansible.builtin.apt:
@@ -65,10 +66,10 @@
       ansible.builtin.systemd:
         name: ddclient-pub
         enabled: true
-        state: started
+        state: restarted
 
     - name: Enable and start warp ddclient
       ansible.builtin.systemd:
         name: ddclient-warp
         enabled: true
-        state: started
+        state: restarted
