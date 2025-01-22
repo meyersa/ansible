@@ -1,7 +1,6 @@
 ---
 - name: Traefik Setup
   tags: ["traefik"]
-  when: KUBERNETES_MASTER is true
   block: 
   - name: Add Traefik chart repo
     kubernetes.core.helm_repository:

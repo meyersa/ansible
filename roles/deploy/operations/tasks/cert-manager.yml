@@ -25,7 +25,8 @@
       release_namespace: "{{ NAMESPACE }}"
     environment: 
       KUBECONFIG: "{{ KUBECONFIG }}"
-
+    retries: 3 
+    
   - name: Copy Cert-Manager Config
     ansible.builtin.template:
       src: cert-manager.yml.j2
