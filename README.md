@@ -3,6 +3,22 @@ Automated deployment and management of servers
 
 Broke up into three parts: configuration, deployment, and maintenance
 
+# Using
+
+## Installation
+
+Ansible can be installed on Ubuntu with 
+
+```bash
+sudo apt update
+sudo apt install software-properties-common
+sudo add-apt-repository --yes --update ppa:ansible/ansible
+sudo apt install ansible
+```
+
+# Features 
+Broken up by the three main sections: configuration, deployment, and maintenance 
+
 ## Configuration 
 - Configure default system tasks 
     - Warp: For remote access
