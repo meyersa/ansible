@@ -1,9 +1,16 @@
 ---
-- name: Jellyfin Install
-  hosts: prod
-  become: true
-  vars: 
+# - name: Jellyfin Install
+#   hosts: prod
+#   become: true
+#   vars: 
+#   roles: 
+#     - maintenance/update
+#     - maintenance/clean
+
+- name: Trigger Reboot 
+  hosts: prod 
+  become: true 
+  # vars: 
+  #   reboot: true
   roles: 
-    - maintenance/update
     - configure/common
-    - maintenance/clean
