@@ -1,0 +1,66 @@
+---
+- name: ArgoCD Setup
+  tags: ["argocd"]
+  block:
+    - name: Download ArgoCD Manifest
+      ansible.builtin.get_url:
+        url: https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+        dest: /var/manifests/argocd.yaml
+        force: true 
+
+    - name: Apply ArgoCD Manifest
+      kubernetes.core.k8s:
+        kubeconfig: "{{ KUBECONFIG }}"
+        src: /var/manifests/argocd.yaml
+        namespace: "{{ NAMESPACE }}"
+
+    - name: Get DEB architecture
+      command: dpkg --print-architecture
+      register: deb_architecture
+
+    - name: Install ArgoCD CLI tools
+      get_url:
+        url: "https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-{{ deb_architecture.stdout }}"
+        dest: "/usr/local/bin/argocd"
+        owner: root
+        group: root
+        mode: 0755
+
+    - name: Get ArgoCD Password
+      shell: "kubectl get secret argocd-initial-admin-secret -n {{ NAMESPACE }} -o jsonpath='{.data.password}'"
+      register: argocd_password_output
+      failed_when: argocd_password_output.stdout == ""
+      ignore_errors: yes
+
+    - name: Extract Password from Output
+      set_fact:
+        argocd_password: "{{ argocd_password_output.stdout | b64decode }}"
+      when: argocd_password_output.rc == 0
+
+    - name: Get ArgoCD Cluster IP
+      shell: "kubectl get svc argocd-server -n {{ NAMESPACE }} -o jsonpath='{.spec.clusterIP}'"
+      register: argocd_k8s_cluster_output
+      when: argocd_password_output.rc == 0
+
+    - name: Extract ArgoCD Cluster IP from kubectl output
+      set_fact:
+        argocd_cluster_ip: "{{ argocd_k8s_cluster_output.stdout }}"
+      when: argocd_k8s_cluster_output.rc == 0
+
+    - name: Login to ArgoCD
+      shell: "argocd login {{ argocd_cluster_ip }}:443 --username admin --password {{ argocd_password }} --insecure"
+      when: argocd_cluster_ip is defined
+
+    - name: Set ArgoCD new Admin pass
+      shell: "argocd account update-password --current-password {{ argocd_password }} --new-password {{ ARGOCD_ADMIN | b64encode }} --insecure"
+      when: argocd_password is defined
+
+  rescue:
+    - name: Skip Secret Deletion (if setup failed)
+      debug:
+        msg: "ArgoCD setup failed, skipping deletion of initial admin secret."
+
+  always:
+    - name: Delete ArgoCD Initial Admin Secret
+      shell: "kubectl delete secret argocd-initial-admin-secret -n {{ NAMESPACE }}"
+      when: argocd_password_output.rc == 0  # Only delete if password retrieval was successful
