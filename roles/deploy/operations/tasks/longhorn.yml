@@ -14,3 +14,13 @@
       release_namespace: "{{ NAMESPACE }}"
     environment: 
       KUBECONFIG: "{{ KUBECONFIG }}"
+
+  - name: Copy LongHorn StorageClass
+    ansible.builtin.template:
+      src: longhorn-storageclass.yml.j2
+      dest: /var/manifests/longhorn-storageclass.yml
+  
+  - name: Apply LongHorn StorageClass
+    kubernetes.core.k8s:
+      kubeconfig: "{{ KUBECONFIG }}"
+      src: /var/manifests/longhorn-storageclass.yml
