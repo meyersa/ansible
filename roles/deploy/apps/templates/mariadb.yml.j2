@@ -1,0 +1,49 @@
+# https://github.com/mariadb-operator/mariadb-operator/blob/main/docs/API_REFERENCE.md
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mariadb-root
+  namespace: default
+type: Opaque
+data:
+  password: {{ MARIADB_ROOT | b64encode }}
+
+---
+apiVersion: k8s.mariadb.com/v1alpha1
+kind: MariaDB
+metadata:
+  name: mariadb
+  namespace: default
+  labels:
+    app: mariadb
+spec:
+  rootPasswordSecretKeyRef:
+    name: mariadb-root
+    key: password
+  storage:
+    size: 5Gi
+    storageClassName: longhorn-retain
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+  image: docker-registry1.mariadb.com/library/mariadb
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mariadb-lb
+  namespace: default
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 30306
+      targetPort: 3306
+      nodePort: 30306
+  selector:
+    app.kubernetes.io/instance: mariadb
