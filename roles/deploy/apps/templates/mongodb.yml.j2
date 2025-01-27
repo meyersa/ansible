@@ -80,7 +80,7 @@ metadata:
 spec:
   secretName: prod-mongodb-tls
   dnsNames:
-    - "{{ MONGO_DOMAIN }}"
+    - "{{ MONGO_DOMAIN | b64encode }}"
   issuerRef:
     name: le-prod
     kind: ClusterIssuer
