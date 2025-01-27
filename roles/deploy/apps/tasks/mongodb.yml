@@ -1,3 +1,6 @@
+# Test configuration from inside of Kubernetes 
+# kubectl run mongo-test --rm -it --image=mongo -- /bin/bash
+# And then mongosh <connection-string>
 ---
 - name: MongoDB Setup
   tags: ["mongodb"]
