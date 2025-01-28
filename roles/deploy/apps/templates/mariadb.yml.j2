@@ -32,18 +32,3 @@ spec:
       cpu: 500m
       memory: 1Gi
   image: docker-registry1.mariadb.com/library/mariadb
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: mariadb-lb
-  namespace: default
-spec:
-  type: LoadBalancer
-  ports:
-    - port: 3306
-      targetPort: 3306
-      nodePort: 30306
-  selector:
-    app.kubernetes.io/instance: mariadb
