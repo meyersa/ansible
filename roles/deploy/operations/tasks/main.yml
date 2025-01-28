@@ -23,3 +23,7 @@
   - import_tasks: longhorn.yml
 
   - import_tasks: argocd.yml
+
+  - import_tasks: mongodb.yml
+
+  - import_tasks: mariadb.yml
