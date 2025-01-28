@@ -80,7 +80,7 @@ metadata:
 spec:
   secretName: prod-mongodb-tls
   dnsNames:
-    - "mongodb.lb.meyerstk.com"
+    - "{{ MONGO_DOMAIN | b64encode }}"
   issuerRef:
     name: le-prod
     kind: ClusterIssuer
@@ -95,9 +95,9 @@ spec:
   entryPoints: 
     - apisecure
   routes:
-  - match: HostSNI(`mongodb.lb.meyerstk.com`)
+  - match: HostSNI(`{{ MONGO_DOMAIN }}`)
     services:
     - name: prod-mongodb-svc
       port: 27017
-  tls: 
+  tls:
     secretName: prod-mongodb-tls

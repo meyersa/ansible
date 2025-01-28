@@ -1,0 +1,37 @@
+# Test from inside Kubernetes pod 
+# kubectl run mariadb-test --rm -it --image=mariadb -- /bin/bash
+# And then mariadb -h <service-name> -P <port> -u <username> -p
+---
+- name: MariaDB Setup
+  tags: ["mariadb"]
+  block: 
+  - name: Add MariaDB chart repo
+    kubernetes.core.helm_repository:
+      name: mariadb-operator
+      repo_url: https://helm.mariadb.com/mariadb-operator
+
+  - name: Deploy MariaDB CRD helm chart
+    kubernetes.core.helm:
+      name: mariadb-operator-crds
+      chart_ref: mariadb-operator/mariadb-operator-crds
+      release_namespace: "default"
+    environment: 
+      KUBECONFIG: "{{ KUBECONFIG }}"
+
+  - name: Deploy MariaDB helm chart
+    kubernetes.core.helm:
+      name: mariadb-operator
+      chart_ref: mariadb-operator/mariadb-operator
+      release_namespace: "default"
+    environment: 
+      KUBECONFIG: "{{ KUBECONFIG }}"
+
+  - name: Copy MariaDB Config
+    ansible.builtin.template:
+      src: mariadb.yml.j2
+      dest: /var/manifests/mariadb.yaml
+  
+  - name: Apply MariaDB Config
+    kubernetes.core.k8s:
+      kubeconfig: "{{ KUBECONFIG }}"
+      src: /var/manifests/mariadb.yaml
