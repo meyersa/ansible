@@ -12,6 +12,7 @@
     kubernetes.core.k8s:
       kubeconfig: "{{ KUBECONFIG }}"
       src: /var/manifests/cert-manager-crd.yaml
+      state: "{{ STATE }}"
 
   - name: Add jetstack chart repo
     kubernetes.core.helm_repository:
@@ -23,6 +24,7 @@
       name: cert-manager
       chart_ref: jetstack/cert-manager
       release_namespace: "{{ NAMESPACE }}"
+      release_state: "{{ STATE }}"
     environment: 
       KUBECONFIG: "{{ KUBECONFIG }}"
     retries: 3 
@@ -36,6 +38,7 @@
     kubernetes.core.k8s:
       kubeconfig: "{{ KUBECONFIG }}"
       src: /var/manifests/cert-manager-config.yaml
+      state: "{{ STATE }}"
     register: result
     until: result.failed == false
     retries: 5

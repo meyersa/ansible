@@ -12,7 +12,7 @@
       kubeconfig: "{{ KUBECONFIG }}"
       name: "{{ NAMESPACE }}"
       kind: Namespace
-      state: present
+      state: "{{ STATE }}"
 
   - import_tasks: cert-manager.yml
 
@@ -20,10 +20,4 @@
 
   - import_tasks: cloudflared.yml
 
-  - import_tasks: longhorn.yml
-
   - import_tasks: argocd.yml
-
-  - import_tasks: mongodb.yml
-
-  - import_tasks: mariadb.yml

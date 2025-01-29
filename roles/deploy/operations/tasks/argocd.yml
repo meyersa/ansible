@@ -13,7 +13,8 @@
         kubeconfig: "{{ KUBECONFIG }}"
         src: /var/manifests/argocd.yaml
         namespace: "{{ NAMESPACE }}"
-
+        state: "{{ STATE }}"
+        
     - name: Get DEB architecture
       command: dpkg --print-architecture
       register: deb_architecture

@@ -18,6 +18,7 @@
       chart_ref: traefik/traefik
       release_namespace: "{{ NAMESPACE }}"
       values_files: /var/manifests/traefik-values.yaml
+      release_state: "{{ STATE }}"
     environment: 
       KUBECONFIG: "{{ KUBECONFIG }}"
     
@@ -30,3 +31,4 @@
     kubernetes.core.k8s:
       kubeconfig: "{{ KUBECONFIG }}"
       src: /var/manifests/traefik-middleware.yaml
+      state: "{{ STATE }}"

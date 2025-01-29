@@ -11,3 +11,4 @@
     kubernetes.core.k8s:
       kubeconfig: "{{ KUBECONFIG }}"
       src: /var/manifests/cloudflared.yaml
+      state: "{{ STATE }}"
