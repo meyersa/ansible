@@ -1,0 +1,21 @@
+---
+- name: Storage Deployment
+  tags: ["storage"]
+  when: KUBERNETES_MASTER is true
+  block: 
+  - name: storage
+    ansible.builtin.set_fact:
+      NAMESPACE: storage
+
+  - name: Create Storage Namespace
+    kubernetes.core.k8s:
+      kubeconfig: "{{ KUBECONFIG }}"
+      name: "{{ NAMESPACE }}"
+      kind: Namespace
+      state: "{{ STATE }}"
+
+  - import_tasks: longhorn.yml
+
+  - import_tasks: mongodb.yml
+
+  - import_tasks: mariadb.yml
