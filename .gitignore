@@ -5,3 +5,6 @@ inventory.yml
 
 # Local playbook
 test.yml
+
+# OVPN files
+*.ovpn*

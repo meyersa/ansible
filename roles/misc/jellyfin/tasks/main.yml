@@ -92,6 +92,12 @@
         dest: "{{ project_src }}/docker-compose.yml"
         mode: '0755'
 
+    - name: Copy OVPN file
+      ansible.builtin.template:
+        src: windscribe.ovpn.j2
+        dest: "{{ config_dir }}/windscribe.ovpn"
+        mode: '0755'
+
     - name: Compose down
       community.docker.docker_compose_v2:
         project_src: "{{ project_src }}"
