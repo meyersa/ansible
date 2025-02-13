@@ -1,3 +1,4 @@
+# https://github.com/traefik/traefik-helm-chart/blob/master/traefik/values.yaml
 globalArguments:
 - "--global.checknewversion"
 
@@ -23,8 +24,9 @@ ports:
     expose:
       default: true
     exposedPort: 30080
-    redirectTo: 
-        port: websecure
+    redirections: 
+        to: websecure
+        scheme: https
     forwardedHeaders: 
         trustedIPs: 
             - 10.0.0.0/8
