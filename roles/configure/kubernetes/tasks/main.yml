@@ -36,6 +36,16 @@
         KUBERNETES_IP: "{{ ansible_default_ipv4.address }}"
       when: KUBERNETES_MASTER
 
+    - name: Create Rancher Directory
+      ansible.builtin.file:
+        path: /etc/rancher
+        state: directory
+
+    - name: Create k3s Directory
+      ansible.builtin.file:
+        path: /etc/rancher/k3s
+        state: directory
+
     - name: Copy K3s Config
       ansible.builtin.template:
         src: k3s-values.yml.j2
