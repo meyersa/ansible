@@ -9,7 +9,8 @@
     kubernetes.core.helm_repository:
       name: mariadb-operator
       repo_url: https://helm.mariadb.com/mariadb-operator
-
+      repo_state: "{{ STATE }}"
+      
   - name: Deploy MariaDB CRD helm chart
     kubernetes.core.helm:
       name: mariadb-operator-crds
@@ -38,3 +39,4 @@
       kubeconfig: "{{ KUBECONFIG }}"
       src: /var/manifests/mariadb.yaml
       state: "{{ STATE }}"
+    retries: 3

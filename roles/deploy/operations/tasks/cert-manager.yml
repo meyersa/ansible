@@ -18,7 +18,8 @@
     kubernetes.core.helm_repository:
       name: jetstack
       repo_url: https://charts.jetstack.io
-
+      repo_state: "{{ STATE }}"
+      
   - name: Deploy Cert-Manager helm chart
     kubernetes.core.helm:
       name: cert-manager

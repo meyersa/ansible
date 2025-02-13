@@ -12,7 +12,6 @@
       kubeconfig: "{{ KUBECONFIG }}"
       name: "{{ NAMESPACE }}"
       kind: Namespace
-      state: "{{ STATE }}"
 
   - import_tasks: cert-manager.yml
 

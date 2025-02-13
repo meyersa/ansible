@@ -7,12 +7,12 @@
     ansible.builtin.set_fact:
       NAMESPACE: storage
 
+  # Don't mess with storage namespaces due to persistent volumes
   - name: Create Storage Namespace
     kubernetes.core.k8s:
       kubeconfig: "{{ KUBECONFIG }}"
       name: "{{ NAMESPACE }}"
       kind: Namespace
-      state: "{{ STATE }}"
 
   - import_tasks: longhorn.yml
 
