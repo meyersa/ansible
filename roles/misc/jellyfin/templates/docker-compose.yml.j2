@@ -83,18 +83,14 @@ services:
     devices: 
       - /dev/net/tun:/dev/net/tun 
     restart: always
+    volumes: 
+      - {{ config_dir }}/windscribe.ovpn:/gluetun/custom.conf:ro
     environment:
-      - VPN_SERVICE_PROVIDER=windscribe
+      - VPN_SERVICE_PROVIDER=custom
       - VPN_TYPE=openvpn
-      - VPN_ENDPOINT_IP={{ JF_WG_IP }}
-      - VPN_ENDPOINT_PORT={{ JF_WG_Port }}
-      # - WIREGUARD_PUBLIC_KEY={{ JF_WG_Pub }}
-      # - WIREGUARD_PRIVATE_KEY={{ JF_WG_Priv }}
-      # - WIREGUARD_PRESHARED_KEY={{ JF_WG_Pre }}
-      # - WIREGUARD_ADDRESSES={{ JF_WG_Add }}
+      - OPENVPN_CUSTOM_CONFIG=/gluetun/custom.conf
       - OPENVPN_USER={{ JF_OVP_USR }}
       - OPENVPN_PASSWORD={{ JF_OVP_PASS }}
-      - OPENVPN_CIPHER=aes-256-gcm
       - FIREWALL_VPN_INPUT_PORTS={{ JF_OVP_PORT }}
       - TZ=Etc/UTC
       - HTTPPROXY=on 
@@ -126,51 +122,29 @@ services:
 
   ### Post Processing
 
-  bazarr-online:
+  bazarr:
     profiles: [ bazarr, finding, all ]
     image: lscr.io/linuxserver/bazarr:latest
-    container_name: bazarr-online
+    container_name: bazarr
     environment:
       - PUID=1000
       - PGID=1000
       - TZ=Etc/UTC
     volumes:
-      - {{ config_dir }}/bazarr-online/config:/config
+      - {{ config_dir }}/bazarr/config:/config
       - {{ movies_dir }}:/movies
       - {{ tvshows_dir }}:/tv
     restart: always
     ports: 
       - '6767:6767'
 
-  bazarr-whisperr:
-    profiles: [ bazarr, finding, all ]
-    image: lscr.io/linuxserver/bazarr:latest
-    container_name: bazarr-whisperr
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Etc/UTC
-    volumes:
-      - {{ config_dir }}/bazarr-whisperr/config:/config
-      - {{ movies_dir }}:/movies
-      - {{ tvshows_dir }}:/tv
-    restart: always
-    ports: 
-      - '6868:6767'
-
   whisperasr:
     profiles: [ whisperasr, all ]
-    image: onerahmet/openai-whisper-asr-webservice:latest-gpu
+    image: mccloud/subgen:cpu
     container_name: whisperasr
-    environment:
-      - ASR_MODEL=base
-      - ASR_ENGINE=faster_whisper
     restart: always
-    group_add: 
-      - '{{ render_group }}'
-    devices:
-      - /dev/dri/renderD128:/dev/dri/renderD128
-
+    environment: 
+      - WHISPER_MODEL=base
 
   tdarr:
     profiles: [ tdarr, all ]
