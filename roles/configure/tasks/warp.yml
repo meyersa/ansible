@@ -74,7 +74,8 @@
     - name: Run warp-cli and register the output
       command: warp-cli --accept-tos status
       register: warp_cli_output
-
+      retries: 3 
+      
     - name: Run warp-cli registration if needed
       command: warp-cli --accept-tos registration new
       when: warp_cli_output.stdout_lines[0] == "Registration Missing"
