@@ -1,7 +1,7 @@
 - name: Configure host
   tags: ["config"]
   block:
-  - import_tasks: ../../../util/webhook.yml
+  - import_tasks: ../../util/webhook.yml
     vars: 
       status: "Info"
       message: "Configuring common..."
@@ -44,16 +44,16 @@
   - import_tasks: swap.yml
 
   # Reboot Host
-  - import_tasks: ../../../util/reboot.yml
+  - import_tasks: ../../util/reboot.yml
     when: reboot is defined and reboot
 
-  - import_tasks: ../../../util/webhook.yml
+  - import_tasks: ../../util/webhook.yml
     vars: 
       status: "Success"
       message: "Configured host"
 
   rescue: 
-    - import_tasks: ../../../util/webhook.yml
+    - import_tasks: ../../util/webhook.yml
       vars: 
         status: "Error"
         message: "Failed to configure common on host"

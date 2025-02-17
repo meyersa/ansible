@@ -1,7 +1,7 @@
 - name: Clean host
   tags: ["clean"]
   block:
-    - import_tasks: ../../util/webhook.yml
+    - import_tasks: ../util/webhook.yml
       vars: 
         message: "Cleaning..."
         status: "Info"
@@ -27,13 +27,13 @@
       when: docker_check.rc == 0
       ansible.builtin.command: docker system prune -f
 
-    - import_tasks: ../../util/webhook.yml
+    - import_tasks: ../util/webhook.yml
       vars: 
         message: "Finished Cleaning"
         status: "Success"
 
   rescue:
-    - import_tasks: ../../util/webhook.yml
+    - import_tasks: ../util/webhook.yml
       vars: 
         message: "Failed to clean"
         status: "Error"

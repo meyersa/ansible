@@ -2,7 +2,7 @@
 - name: Update Host
   tags: ["update"]
   block:
-    - import_tasks: ../../util/webhook.yml
+    - import_tasks: ../util/webhook.yml
       vars: 
         message: "Updating..."
         status: "Info"
@@ -17,7 +17,7 @@
       ansible.builtin.apt:
         upgrade: dist
 
-    - import_tasks: ../../util/webhook.yml
+    - import_tasks: ../util/webhook.yml
       vars: 
         message: "Done Updating"
         status: "Success"
@@ -26,7 +26,7 @@
       when: reboot is defined and reboot
       
   rescue:
-    - import_tasks: ../../util/webhook.yml
+    - import_tasks: ../util/webhook.yml
       vars: 
         message: "Failed to update"
         status: "Error"
