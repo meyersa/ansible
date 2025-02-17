@@ -4,4 +4,4 @@
   become: true
   vars: 
   roles: 
-    - deploy/operations
+    - deploy/kubernetes

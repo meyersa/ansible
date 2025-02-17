@@ -13,4 +13,4 @@
   # vars: 
   #   reboot: true
   roles: 
-    - configure/common
+    - configure

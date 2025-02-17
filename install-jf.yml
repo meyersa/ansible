@@ -4,7 +4,7 @@
   become: true
   vars: 
   roles: 
-    - maintenance/update
-    - configure/common
+    - update
+    - configure
     - misc/jellyfin
-    - maintenance/clean
+    - clean
