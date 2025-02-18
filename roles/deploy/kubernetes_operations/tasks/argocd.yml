@@ -7,7 +7,7 @@
         url: https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
         dest: /var/manifests/argocd.yaml
         force: true 
-      when: STATE == "PRESENT"
+      when: STATE == "present"
       
     - name: Apply ArgoCD Manifest
       kubernetes.core.k8s:
