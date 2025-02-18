@@ -38,19 +38,19 @@ spec:
             - name: mongod
               resources:
                 requests:
-                  cpu: "200m"
+                  cpu: "100m"
                   memory: "300Mi"
                 limits:
-                  cpu: "500m"
-                  memory: "400Mi"
+                  cpu: "200m"
+                  memory: "600Mi"
             - name: mongodb-agent
               resources:
                 requests:
-                  cpu: "200m"
+                  cpu: "100m"
                   memory: "300Mi"
                 limits:
-                  cpu: "500m"
-                  memory: "400Mi"
+                  cpu: "200m"
+                  memory: "600Mi"
       volumeClaimTemplates:
         - metadata:
             name: data-volume
@@ -70,34 +70,3 @@ metadata:
 type: Opaque
 stringData:
   password: {{ MONGODB_ROOT }}
-
----
-apiVersion: cert-manager.io/v1
-kind: Certificate
-metadata:
-  name: prod-mongodb
-  namespace: {{ NAMESPACE }}
-spec:
-  secretName: prod-mongodb-tls
-  dnsNames:
-    - "{{ MONGO_DOMAIN | b64encode }}"
-  issuerRef:
-    name: le-prod
-    kind: ClusterIssuer
-
----
-apiVersion: traefik.io/v1alpha1
-kind: IngressRouteTCP
-metadata:
-  name: prod-mongodb-ingress
-  namespace: {{ NAMESPACE }}
-spec:
-  entryPoints: 
-    - apisecure
-  routes:
-  - match: HostSNI(`{{ MONGO_DOMAIN }}`)
-    services:
-    - name: prod-mongodb-svc
-      port: 27017
-  tls:
-    secretName: prod-mongodb-tls

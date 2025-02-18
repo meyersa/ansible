@@ -35,35 +35,3 @@ type: Opaque
 stringData:
   accesskey: {{ MINIO_ACCESS_KEY }}
   secretkey: {{ MINIO_SECRET_KEY }}
-
----
-apiVersion: cert-manager.io/v1
-kind: Certificate
-metadata:
-  name: prod-minio
-  namespace: {{ NAMESPACE }}
-spec:
-  secretName: prod-minio-tls
-  dnsNames:
-    - "minio.lb.meyerstk.com"
-  issuerRef:
-    name: le-prod
-    kind: ClusterIssuer
-
----
-apiVersion: traefik.io/v1alpha1
-kind: IngressRoute
-metadata:
-  name: prod-minio-ingress
-  namespace: {{ NAMESPACE }}
-spec:
-  entryPoints:
-    - apisecure
-  routes:
-    - match: Host(`minio.lb.meyerstk.com`)
-      kind: Rule
-      services:
-        - name: prod-minio
-          port: 9000
-  tls:
-    secretName: prod-minio-tls
