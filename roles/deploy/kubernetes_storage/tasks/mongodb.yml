@@ -30,3 +30,41 @@
       kubeconfig: "{{ KUBECONFIG }}"
       src: /var/manifests/mongodb.yaml
       state: "{{ STATE }}"
+
+  - name: Apply Mongo Operator Patch
+    when: STATE == "present"
+    block: 
+    - name: Get Operator for Patch
+      kubernetes.core.k8s_info:
+        api_version: apps/v1
+        kind: Deployment
+        namespace: "{{ NAMESPACE }}"
+        name: mongodb-kubernetes-operator
+      register: deployment_info
+
+    - name: Extract current image for Patch
+      set_fact:
+        current_image: "{{ deployment_info.resources[0].spec.template.spec.containers[0].image }}"
+
+    - name: Patch MongoDB Operator Deployment
+      kubernetes.core.k8s:
+        state: patched
+        kind: Deployment
+        api_version: apps/v1
+        namespace: "{{ NAMESPACE }}"
+        name: mongodb-kubernetes-operator
+        definition:
+          spec:
+            template:
+              spec:
+                containers:
+                  - name: mongodb-kubernetes-operator
+                    image: "{{ current_image }}"
+                    resources:
+                      requests:
+                        cpu: "200m"
+                        memory: "250Mi"
+                      limits:
+                        cpu: "500m"
+                        memory: "750Mi"
+        merge_type: merge
