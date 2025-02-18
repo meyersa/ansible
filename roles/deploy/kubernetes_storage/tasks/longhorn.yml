@@ -13,10 +13,9 @@
       chart_ref: longhorn/longhorn
       release_namespace: "{{ NAMESPACE }}"
       release_state: "{{ STATE }}"
-      wait: yes
+      wait: true
     environment: 
       KUBECONFIG: "{{ KUBECONFIG }}"
-    retries: 3 
 
   - name: Delete on remove Longhorn chart repo
     kubernetes.core.helm_repository:
