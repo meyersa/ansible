@@ -71,10 +71,11 @@
   tags: ["server-setup"]
   when: not KUBERNETES_MASTER and KUBERNETES_AGENT is not defined
   block:
-    - name: Install as Agent
+    - name: Install as Server
       command: sh /tmp/k3s-install.sh server --server https://{{ hostvars[groups[ENVIRONMENT][0]]['KUBERNETES_IP'] }}:6443
       environment: 
         K3S_TOKEN: "{{ K3S_TOKEN }}"
+      retries: 3 
 
 - name: Setup agent node 
   tags: ["agent-setup"]
@@ -84,7 +85,8 @@
       command: sh /tmp/k3s-install.sh agent --server https://{{ hostvars[groups[ENVIRONMENT][0]]['KUBERNETES_IP'] }}:6443
       environment: 
         K3S_TOKEN: "{{ K3S_TOKEN }}"
-
+      retries: 3 
+      
 - name: Configure cluster
   when: KUBERNETES_MASTER
   block: 
