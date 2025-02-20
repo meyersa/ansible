@@ -15,7 +15,8 @@
         src: /var/manifests/argocd.yaml
         namespace: "{{ NAMESPACE }}"
         state: "{{ STATE }}"
-        
+        wait: true 
+
     - name: Get DEB architecture
       command: dpkg --print-architecture
       register: deb_architecture
@@ -54,7 +55,7 @@
       when: argocd_cluster_ip is defined
 
     - name: Set ArgoCD new Admin pass
-      shell: "argocd account update-password --current-password {{ argocd_password }} --new-password {{ ARGOCD_ADMIN | b64encode }} --insecure"
+      shell: "argocd account update-password --current-password {{ argocd_password }} --new-password {{ ARGOCD_ADMIN }} --insecure"
       when: argocd_password is defined
 
   rescue:
