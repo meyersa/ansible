@@ -46,11 +46,6 @@
         path: /etc/rancher/k3s
         state: directory
 
-    - name: Copy K3s Config
-      ansible.builtin.template:
-        src: k3s-values.yml.j2
-        dest: /etc/rancher/k3s/config.yaml
-
     - name: Set ENV for KUBECTL 
       lineinfile:
         path: /etc/environment
@@ -62,6 +57,11 @@
   tags: ["master-setup"]
   when: KUBERNETES_MASTER
   block:
+    - name: Copy K3s Config
+      ansible.builtin.template:
+        src: k3s-values.yml.j2
+        dest: /etc/rancher/k3s/config.yaml
+
     - name: Install as Master
       command: sh /tmp/k3s-install.sh server
       environment: 
