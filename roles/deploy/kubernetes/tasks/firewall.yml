@@ -33,3 +33,15 @@
       loop: 
         - 8472
         - 51820
+        - 51821
+        
+    - name: Open Longhorn port
+      community.general.ufw:
+        rule: allow
+        port: "{{ item }}"
+        src: 10.0.0.0/24
+        proto: tcp
+      loop: 
+        - 9501
+        - 9502
+        - 9503
