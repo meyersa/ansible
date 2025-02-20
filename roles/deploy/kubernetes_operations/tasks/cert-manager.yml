@@ -13,7 +13,8 @@
       kubeconfig: "{{ KUBECONFIG }}"
       src: /var/manifests/cert-manager-crd.yaml
       state: "{{ STATE }}"
-
+      wait: true
+      
   - name: Add jetstack chart repo
     kubernetes.core.helm_repository:
       name: jetstack
@@ -26,6 +27,7 @@
       chart_ref: jetstack/cert-manager
       release_namespace: "{{ NAMESPACE }}"
       release_state: "{{ STATE }}"
+      wait: true
     environment: 
       KUBECONFIG: "{{ KUBECONFIG }}"
     retries: 3 

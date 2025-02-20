@@ -17,6 +17,7 @@
       chart_ref: mariadb-operator/mariadb-operator-crds
       release_namespace: "{{ NAMESPACE }}"
       release_state: "{{ STATE }}"
+      wait: true
     environment: 
       KUBECONFIG: "{{ KUBECONFIG }}"
 
@@ -26,6 +27,7 @@
       chart_ref: mariadb-operator/mariadb-operator
       release_namespace: "{{ NAMESPACE }}"
       release_state: "{{ STATE }}"
+      wait: true
     environment: 
       KUBECONFIG: "{{ KUBECONFIG }}"
 

@@ -20,6 +20,7 @@
       release_namespace: "{{ NAMESPACE }}"
       values_files: /var/manifests/traefik-values.yaml
       release_state: "{{ STATE }}"
+      wait: true
     environment: 
       KUBECONFIG: "{{ KUBECONFIG }}"
     
