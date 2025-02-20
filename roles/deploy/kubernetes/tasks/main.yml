@@ -53,15 +53,15 @@
         create: yes
         state: "{{ STATE }}"
 
-- name: Setup master node
-  tags: ["master-setup"]
-  when: KUBERNETES_MASTER
-  block:
     - name: Copy K3s Config
       ansible.builtin.template:
         src: k3s-values.yml.j2
         dest: /etc/rancher/k3s/config.yaml
 
+- name: Setup master node
+  tags: ["master-setup"]
+  when: KUBERNETES_MASTER
+  block:
     - name: Install as Master
       command: sh /tmp/k3s-install.sh server
       environment: 
@@ -72,21 +72,12 @@
   when: not KUBERNETES_MASTER and KUBERNETES_AGENT is not defined
   block:
     - name: Install as Server
-      command: sh /tmp/k3s-install.sh server --server https://{{ hostvars[groups[ENVIRONMENT][0]]['KUBERNETES_IP'] }}:6443
+      command: sh /tmp/k3s-install.sh server
       environment: 
+        K3S_SERVER: "https://{{ hostvars[groups[ENVIRONMENT][0]]['KUBERNETES_IP'] }}:6443"
         K3S_TOKEN: "{{ K3S_TOKEN }}"
       retries: 3 
 
-- name: Setup agent node 
-  tags: ["agent-setup"]
-  when: not KUBERNETES_MASTER and KUBERNETES_AGENT is defined
-  block:
-    - name: Install as Agent
-      command: sh /tmp/k3s-install.sh agent --server https://{{ hostvars[groups[ENVIRONMENT][0]]['KUBERNETES_IP'] }}:6443
-      environment: 
-        K3S_TOKEN: "{{ K3S_TOKEN }}"
-      retries: 3 
-      
 - name: Configure cluster
   when: KUBERNETES_MASTER
   block: 
