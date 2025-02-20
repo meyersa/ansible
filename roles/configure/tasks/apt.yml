@@ -25,5 +25,7 @@
           - software-properties-common
           - debian-archive-keyring
           - cron
+          - tcpdump
+          - netcat-traditional
         state: latest
         update_cache: true
