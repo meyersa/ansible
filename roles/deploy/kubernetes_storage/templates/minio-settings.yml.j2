@@ -1,0 +1,10 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: minio-creds
+  namespace: {{ NAMESPACE }}
+type: Opaque
+stringData:
+  accesskey: {{ MINIO_ACCESS_KEY }}
+  secretkey: {{ MINIO_SECRET_KEY }}

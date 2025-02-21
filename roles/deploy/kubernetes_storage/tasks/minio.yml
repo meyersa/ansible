@@ -1,0 +1,47 @@
+---
+- name: Minio Setup
+  tags: ["Minio"]
+  block: 
+  - name: Add Minio chart repo
+    kubernetes.core.helm_repository:
+      name: minio-operator
+      repo_url: https://operator.min.io
+      repo_state: "{{ STATE }}"
+      
+  # https://raw.githubusercontent.com/minio/operator/master/helm/tenant/values.yaml
+  - name: Copy Minio Values
+    ansible.builtin.template:
+      src: minio-values.yml.j2
+      dest: /var/manifests/minio-values.yaml
+  
+  - name: Deploy Minio Operator 
+    kubernetes.core.helm:
+      name: minio-operator
+      chart_ref: minio-operator/operator
+      release_namespace: "{{ NAMESPACE }}"
+      release_state: "{{ STATE }}"
+      wait: true
+    environment: 
+      KUBECONFIG: "{{ KUBECONFIG }}"
+
+  - name: Deploy Minio Tenant
+    kubernetes.core.helm:
+      name: minio-operator
+      chart_ref: minio-operator/tenant
+      release_namespace: "{{ NAMESPACE }}"
+      release_state: "{{ STATE }}"
+      values_files: /var/manifests/minio-values.yaml
+      wait: true
+    environment: 
+      KUBECONFIG: "{{ KUBECONFIG }}"
+
+  - name: Copy Minio Creds
+    ansible.builtin.template:
+      src: minio-settings.yml.j2
+      dest: /var/manifests/minio-settings.yaml
+  
+  - name: Apply Minio Config
+    kubernetes.core.k8s:
+      kubeconfig: "{{ KUBECONFIG }}"
+      src: /var/manifests/minio-settings.yaml
+      state: "{{ STATE }}"

@@ -19,3 +19,5 @@
   - import_tasks: mongodb.yml
 
   - import_tasks: mariadb.yml
+
+  - import_tasks: minio.yml
