@@ -1,0 +1,16 @@
+---
+- name: Monitoring Deployment
+  tags: ["Monitoring"]
+  when: KUBERNETES_MASTER is true
+  block: 
+  - name: NameSpace
+    ansible.builtin.set_fact:
+      NAMESPACE: monitoring
+
+  - name: Create Monitoring Namespace
+    kubernetes.core.k8s:
+      kubeconfig: "{{ KUBECONFIG }}"
+      name: "{{ NAMESPACE }}"
+      kind: Namespace
+
+  - import_tasks: grafana.yml

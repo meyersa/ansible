@@ -1,0 +1,20 @@
+---
+- name: Grafana Setup
+  tags: ["grafana"]
+  block: 
+  - name: Add Grafana chart repo
+    kubernetes.core.helm_repository:
+      name: grafana
+      repo_url: https://grafana.github.io/helm-charts
+      repo_state: "{{ STATE }}"
+      
+  - name: Deploy Grafana helm chart
+    kubernetes.core.helm:
+      name: traefik
+      chart_ref: traefik/traefik
+      release_namespace: "{{ NAMESPACE }}"
+      values_files: /var/manifests/traefik-values.yaml
+      release_state: "{{ STATE }}"
+      wait: true
+    environment: 
+      KUBECONFIG: "{{ KUBECONFIG }}"
