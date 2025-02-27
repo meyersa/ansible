@@ -1,0 +1,75 @@
+---
+- name: Install and configure auditd with PAM session auditing and webhook notifications
+  tags: ["auditd"]
+  block:
+    - name: Install auditd and audispd-plugins
+      apt:
+        name:
+          - auditd
+          - audispd-plugins
+        state: present
+        update_cache: yes
+
+    - name: Enable and start auditd
+      service:
+        name: auditd
+        state: started
+        enabled: yes
+
+    - name: Deploy persistent auditd rules for file changes and sudo events
+      copy:
+        dest: /etc/audit/rules.d/audit.rules
+        content: |
+          -w /etc/pam.d/common-auth -p rwxa -k pam_auth
+          -a always,exit -F arch=b64 -S execve -F path=/usr/bin/login -F key=login_events
+          -a always,exit -F arch=b64 -S execve -F path=/usr/sbin/sshd -F key=login_events
+          -a always,exit -F arch=b64 -S exit -F path=/usr/bin/logout -F key=logout_events
+          -w /var/log/btmp -p wa -k user_failed_login
+          -w /usr/bin/sudo -p x -F auid>=1000 -F auid!=4294967295 -F auid!=0 -k sudo_exec
+          -w /etc/sudoers -p wa -k sudo_config
+          -w /etc/passwd -p wa -k passwd_changes
+          -w /etc/group -p wa -k group_changes
+          -w /etc/shadow -p wa -k shadow_changes
+          -w /etc/gshadow -p wa -k gshadow_changes
+          -w /etc/ssh/sshd_config -p wa -k ssh_config_changes
+        owner: root
+        group: root
+        mode: '0644'
+      register: audit_updated
+
+    - name: Flush current audit rules
+      command: auditctl -D
+      when: audit_updated.changed
+
+    - name: Load persistent audit rules immediately
+      command: augenrules --load
+      when: audit_updated.changed
+
+    - name: Deploy auditd webhook script from template
+      template:
+        src: auditd-webhook.sh.j2
+        dest: /usr/local/bin/auditd-webhook.sh
+        mode: '0755'
+        owner: root
+        group: root
+      register: audit_plugin_updated
+
+    - name: Configure audisp plugin to send webhooks
+      copy:
+        dest: /etc/audit/plugins.d/discord_webhook.conf
+        content: |
+          active = yes
+          direction = out
+          path = /usr/local/bin/auditd-webhook.sh
+          type = always
+          format = string
+        owner: root
+        group: root
+        mode: '0644'
+      register: audit_conf_updated
+
+    - name: Restart auditd to apply changes
+      service:
+        name: auditd
+        state: restarted
+      when: (audit_plugin_updated is changed) or audit_conf_updated.changed

@@ -43,6 +43,10 @@
   # Disable Swap
   - import_tasks: swap.yml
 
+  # Configure AuditD
+  # TODO: Add Crowdsec Processor for this
+  - import_tasks: auditd.yml 
+  
   # Reboot Host
   - import_tasks: ../../util/reboot.yml
     when: reboot is defined and reboot

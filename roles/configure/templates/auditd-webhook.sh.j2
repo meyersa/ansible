@@ -1,0 +1,88 @@
+#!/bin/bash
+DEBUG_FILE="/tmp/auditd-webhook-debug.log"
+
+log() {
+  logger "auditd-webhook: $1"
+  echo "DEBUG: $(date +'%Y-%m-%d %H:%M:%S') - $1" >> "$DEBUG_FILE"
+}
+
+log "PLS. Script execution started"
+
+# Read input with a timeout
+if read -t 5 input; then
+  log "Received input: $input"
+else
+  log "No input received after timeout, exiting."
+  exit 0
+fi
+
+# Extract the event key using PCRE so that we capture the value inside the quotes.
+event_key=$(echo "$input" | grep -oP 'key="\K[^"]+')
+if [ -z "$event_key" ]; then
+  event_key="Unknown"
+fi
+# Normalize to lowercase
+event_key=$(echo "$event_key" | tr '[:upper:]' '[:lower:]')
+log "Extracted event key: $event_key"
+
+# Define allowed keys
+allowed_keys="user_login user_logout passwd_changes group_changes shadow_changes gshadow_changes ssh_config_changes"
+if ! echo "$allowed_keys" | grep -qw "$event_key"; then
+  log "Event key '$event_key' is not in allowed list; exiting."
+  exit 0
+fi
+
+# Create a pretty title (replace _ with space & capitalize each word)
+pretty_action=$(echo "$event_key" | sed -r 's/(^|_)([a-z])/\U\2/g')
+log "Pretty action: $pretty_action"
+
+# Determine embed color based on event key
+if [[ "$event_key" == "user_login" || "$event_key" == "user_logout" ]]; then
+  color=65280         # Green
+elif [[ "$event_key" == "sudo_exec" ]]; then
+  color=16753920      # Orange
+elif [[ "$event_key" == *"changes" ]]; then
+  color=16711680      # Red
+else
+  color=5814783       # Default fallback color
+fi
+log "Color set to: $color"
+
+# Get additional details
+server=$(hostname)
+user=$(echo "$input" | grep -oE "auid=[^ ]+" | head -n1 | cut -d= -f2)
+[ -z "$user" ] && user="Unknown"
+# Map numeric user id to a pretty username
+if [ "$user" != "Unknown" ]; then
+  pretty_user=$(getent passwd "$user" | cut -d: -f1)
+  [ -z "$pretty_user" ] && pretty_user="$user"
+else
+  pretty_user="$user"
+fi
+
+ip=$(echo "$input" | grep -oE "addr=[^ ]+" | head -n1 | cut -d= -f2)
+[ -z "$ip" ] && ip="Unknown"
+timestamp=$(date +"%Y-%m-%d %H:%M:%S")
+log "Server: $server, User: $pretty_user, IP: $ip, Timestamp: $timestamp"
+
+# Build the JSON payload using jq for proper escaping
+json_payload=$(jq -n --arg title "$pretty_action" \
+                     --arg server "$server" \
+                     --arg pretty_user "$pretty_user" \
+                     --arg ip "$ip" \
+                     --arg timestamp "$timestamp" \
+                     --argjson color "$color" \
+                     '{
+  content: null,
+  embeds: [{
+    title: $title,
+    description: ("`Server`: " + $server + "\n`User`: " + $pretty_user + "\n`IP`: " + $ip + "\n`Time`: " + $timestamp),
+    color: $color
+  }],
+  username: "AuditD Notifier"
+}')
+log "JSON payload: $json_payload"
+
+# Send the payload to Discord using the webhook
+response=$(curl -H "Content-Type: application/json" -d "$json_payload" "{{ AUDITD_WEBHOOK }}" 2>&1)
+log "curl response: $response"
