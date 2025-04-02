@@ -21,11 +21,12 @@
         image: minio/minio:latest
         state: started
         restart_policy: unless-stopped
-        command: server /data
+        command: server /data --console-address ":9001"
         env:
-          MINIO_ACCESS_KEY: "{{ MINIO_ACCESS_KEY }}"
-          MINIO_SECRET_KEY: "{{ MINIO_SECRET_KEY }}"
+          MINIO_ROOT_USER: "{{ MINIO_ROOT_USER }}"
+          MINIO_ROOT_PASSWORD: "{{ MINIO_ROOT_PASSWORD }}"
         volumes:
           - "{{ MINIO_DATA_DIR }}:/data"
         networks:
           - name: minio
+          - name: proxy
