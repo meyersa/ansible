@@ -22,9 +22,6 @@
   # Set Hostname 
   - import_tasks: hostname.yml
 
-  # Set TimeZone
-  - import_tasks: timezone.yml
-
   # Configure UFW
   - import_tasks: ufw-basic.yml
 
