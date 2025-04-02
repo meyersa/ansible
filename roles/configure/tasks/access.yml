@@ -20,7 +20,7 @@
 
     - name: Fetch public keys from GitHub
       uri:
-        url: "https://api.github.com/users/{{ github_user }}/keys"
+        url: "https://api.github.com/users/{{ GITHUB_USER }}/keys"
         return_content: yes
       register: github_keys
 
