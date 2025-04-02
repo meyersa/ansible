@@ -1,0 +1,19 @@
+---
+- name: Install Cloudflared
+  tags: ["cloudflared"]
+  block: 
+    - name: Create proxy network
+      docker_network:
+        name: proxy
+
+    - name: Add Cloudflared for proxying
+      docker_container: 
+        name: cloudflared 
+        image: cloudflare/cloudflared
+        state: started
+        restart_policy: unless-stopped
+        command: tunnel run 
+        env: 
+          TUNNEL_TOKEN: "{{ CLOUDFLARED_TOKEN }}"
+        networks: 
+          - name: proxy

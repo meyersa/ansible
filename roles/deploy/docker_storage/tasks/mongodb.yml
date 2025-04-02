@@ -1,0 +1,30 @@
+- name: MongoDB
+  tags: ["mongodb"]
+  vars:
+    MINIO_DATA_DIR: "{{ DATA_DIR }}/mongodb"
+  block:
+    - name: Create MongoDB network
+      docker_network:
+        name: mongodb
+
+    - name: Create MongoDB data directory
+      file:
+        path: "{{ DATA_DIR }}"
+        state: directory
+        owner: 999
+        group: 999
+        mode: '0755'
+
+    - name: Run MongoDB container
+      docker_container:
+        name: mongodb
+        image: mongo:latest
+        state: started
+        restart_policy: unless-stopped
+        env:
+          MONGO_INITDB_ROOT_USERNAME: "{{ MONGO_ROOT_USER }}"
+          MONGO_INITDB_ROOT_PASSWORD: "{{ MONGO_ROOT_PASS }}"
+        volumes:
+          - "{{ DATA_DIR }}:/data/db"
+        networks:
+          - name: mongodb

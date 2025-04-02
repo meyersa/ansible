@@ -1,0 +1,18 @@
+---
+- name: Install Watchtower
+  tags: ["watchtower"]
+  block: 
+    - name: Add watchtower for automatic updates 
+      docker_container:
+        name: watchtower
+        image: containrrr/watchtower
+        state: started
+        restart_policy: unless-stopped
+        hostname: "{{ ansible_hostname }}"
+        volumes:
+          - /var/run/docker.sock:/var/run/docker.sock
+        env:
+          WATCHTOWER_NOTIFICATION_REPORT: "true"
+          WATCHTOWER_NOTIFICATION_URL: "{{ WATCHTOWER_URL }}"
+          WATCHTOWER_CLEANUP: "true"
+          WATCHTOWER_POLL_INTERVAL: "43200"
