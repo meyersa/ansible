@@ -1,0 +1,109 @@
+---
+- name: Loki
+  tags: ["loki"]
+  vars:
+    LOKI_DATA_DIR: "{{ DATA_DIR }}/loki"
+    LOKI_CONFIG_DIR: "{{ CONFIG_DIR }}/loki"
+    LOKI_CREDS_FILE: "{{ LOKI_CONFIG_DIR }}/creds.env"
+  block:
+    - name: Create Loki network
+      docker_network:
+        name: loki
+
+    - name: Create Loki data directory
+      file:
+        path: "{{ LOKI_DATA_DIR }}"
+        state: directory
+        owner: 10001
+        group: 10001
+        mode: "0755"
+
+    - name: Create Loki config directory
+      file:
+        path: "{{ LOKI_CONFIG_DIR }}"
+        state: directory
+        owner: 10001
+        group: 10001
+        mode: "0755"
+
+    - name: Deploy Loki config
+      template:
+        src: loki-config.yaml.j2
+        dest: "{{ LOKI_CONFIG_DIR }}/local-config.yaml"
+        owner: 10001
+        group: 10001
+        mode: "0644"
+      register: loki_config_result
+
+    - name: Copy setup-minio.sh into config dir
+      copy:
+        dest: "{{ LOKI_CONFIG_DIR }}/setup-minio.sh"
+        mode: "0755"
+        content: |
+          #!/bin/sh
+          set -e
+          export MC_HOST_s3=http://{{ MINIO_ROOT_USER }}:{{ MINIO_ROOT_PASSWORD }}@minio:9000
+          mc admin user info s3 {{ LOKI_ACCESS_KEY }} > /dev/null 2>&1 || mc admin user add s3 {{ LOKI_ACCESS_KEY }} {{ LOKI_SECRET_KEY }}
+          mc ls s3/{{ LOKI_ACCESS_KEY }} > /dev/null 2>&1 || mc mb s3/{{ LOKI_ACCESS_KEY }}
+          mc admin policy info s3 loki-policy > /dev/null 2>&1 || mc admin policy create s3 loki-policy /loki-policy.json
+          mc admin policy attach s3 loki-policy --user={{ LOKI_ACCESS_KEY }}
+
+    - name: Copy loki-policy.json
+      copy:
+        dest: "{{ LOKI_CONFIG_DIR }}/loki-policy.json"
+        content: |
+          {
+            "Version": "2012-10-17",
+            "Statement": [{
+              "Effect": "Allow",
+              "Action": ["s3:*"],
+              "Resource": ["arn:aws:s3:::loki", "arn:aws:s3:::loki/*"]
+            }]
+          }
+        mode: "0600"
+
+    - name: Run setup-minio.sh inside mc container
+      docker_container:
+        name: minio-mc-runner
+        image: minio/mc
+        entrypoint: ["/bin/sh", "-c"]
+        command: "/{{ LOKI_CONFIG_DIR }}/setup-minio.sh"
+        volumes:
+          - "{{ LOKI_CONFIG_DIR }}/setup-minio.sh:/{{ LOKI_CONFIG_DIR }}/setup-minio.sh"
+          - "{{ LOKI_CONFIG_DIR }}/loki-policy.json:/loki-policy.json"
+        networks:
+          - name: minio
+        auto_remove: yes
+        restart_policy: "no"
+
+    - name: Add Loki container
+      docker_container:
+        name: loki
+        image: grafana/loki:latest
+        state: started
+        restart_policy: unless-stopped
+        networks:
+          - name: loki
+          - name: traefik
+          - name: minio
+        ports:
+          - "3100:3100"
+        command: -config.file=/etc/loki/local-config.yaml
+        volumes:
+          - "{{ LOKI_DATA_DIR }}:/loki"
+          - "{{ LOKI_CONFIG_DIR }}/local-config.yaml:/etc/loki/local-config.yaml"
+        labels:
+          traefik.enable: "true"
+          traefik.http.routers.loki.rule: "Host(`loki.{{ BACKEND_DOMAIN }}`)"
+          traefik.http.routers.loki.entrypoints: "apisecure"
+          traefik.http.services.loki.loadbalancer.server.port: "3100"
+          traefik.http.middlewares.loki-auth.basicauth.users: "{{ LOKI_USER }}:{{ LOKI_PASS }}"
+          traefik.http.middlewares.loki-auth.basicauth.removeheader: "true"
+          traefik.http.routers.Loki.middlewares: "loki-auth@docker"
+      register: loki_container_result
+
+    - name: Restart Loki if config changed but container did not
+      docker_container:
+        name: loki
+        restart: true
+      when: loki_config_result.changed and not loki_container_result.changed
