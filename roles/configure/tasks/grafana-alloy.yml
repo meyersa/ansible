@@ -12,6 +12,7 @@
         state: directory
         mode: "0755"
 
+    # TODO: Add scraping to find metrics. labels on containers to get all metrics
     - name: Copy Alloy config
       ansible.builtin.template:
         src: config.alloy.j2
@@ -55,5 +56,4 @@
         name: alloy
         groups: docker
         append: yes
-      when: "'docker' in group_names"
       ignore_errors: True
