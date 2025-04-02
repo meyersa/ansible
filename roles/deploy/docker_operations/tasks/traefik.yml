@@ -30,8 +30,8 @@
       published_ports:
         - "80:80"
         - "443:443"
-        - "8080:8080"
-        - "8082:8082"
+        - "127.0.0.1:8080:8080"
+        - "127.0.0.1:8082:8082"
       volumes:
         - /var/run/docker.sock:/var/run/docker.sock:ro
         - "{{ TRAEFIK_CONFIG_DIR }}/letsencrypt:/letsencrypt"
@@ -52,19 +52,26 @@
 
         # Entrypoints
         - "--entrypoints.web.address=:80"
-        - "--entrypoints.websecure.address=:443"
-        - "--entrypoints.websecure.reusePort=true"
-        - "--entrypoints.apisecure.address=:443"
-        - "--entrypoints.apisecure.reusePort=true"
-        - "--entrypoints.metrics.address=:8082"
         - "--entryPoints.web.forwardedHeaders.trustedIPs=127.0.0.1/32,172.16.0.0/12"
-        - "--entryPoints.websecure.forwardedHeaders.trustedIPs=127.0.0.1/32,172.16.0.0/12"
-        - "--entryPoints.apisecure.forwardedHeaders.trustedIPs=127.0.0.1/32,172.16.0.0/12"
         - "--entryPoints.web.http.redirections.entryPoint.to=websecure"
         - "--entryPoints.web.http.redirections.entryPoint.scheme=https"
 
+        - "--entrypoints.websecure.address=:443"
+        - "--entrypoints.websecure.reusePort=true"
+        - "--entryPoints.websecure.forwardedHeaders.trustedIPs=127.0.0.1/32,172.16.0.0/12"
+        - "--entrypoints.websecure.http.middlewares=web-ratelimit@file,secure-headers@file"
+        - "--entrypoints.websecure.http.tls.certResolver=letsencrypt"
+
+        - "--entrypoints.apisecure.address=:443"
+        - "--entrypoints.apisecure.reusePort=true"
+        - "--entryPoints.apisecure.forwardedHeaders.trustedIPs=127.0.0.1/32,172.16.0.0/12"
+        - "--entrypoints.apisecure.http.middlewares=api-ratelimit@file,secure-headers@file"
+        - "--entrypoints.apisecure.http.tls.certResolver=letsencrypt"
+        
+        - "--entrypoints.metrics.address=:8082"
+
         # LetsEncrypt
-        - "--certificatesresolvers.myresolver.acme.httpchallenge=true"
-        - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
-        - "--certificatesresolvers.myresolver.acme.email={{ TLS_EMAIL }}"
-        - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+        - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
+        - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+        - "--certificatesresolvers.letsencrypt.acme.email={{ TLS_EMAIL }}"
+        - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"

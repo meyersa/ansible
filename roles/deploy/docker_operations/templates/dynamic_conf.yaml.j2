@@ -1,25 +1,6 @@
 http:
-  routers:
-    default-websecure:
-      entryPoints:
-        - websecure
-      middlewares:
-        - secure-headers
-        - secure-ratelimit
-      tls:
-        certResolver: myresolver
-
-    default-apisecure:
-      entryPoints:
-        - apisecure
-      middlewares:
-        - secure-headers
-        - api-ratelimit
-      tls:
-        certResolver: myresolver
-
   middlewares:
-    secure-ratelimit:
+    web-ratelimit:
       rateLimit:
         average: 100
         burst: 50
