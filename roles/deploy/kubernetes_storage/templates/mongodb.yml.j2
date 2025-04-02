@@ -1,67 +1,4 @@
 ---
-apiVersion: mongodbcommunity.mongodb.com/v1
-kind: MongoDBCommunity
-metadata:
-  name: prod-mongodb
-  namespace: {{ NAMESPACE }}
-  labels:
-    app: prod-mongodb-svc
-spec:
-  members: 1
-  type: ReplicaSet
-  version: "6.0.5"
-  security:
-    authentication:
-      modes: ["SCRAM"]
-  users:
-    - name: root
-      db: admin
-      passwordSecretRef:
-        name: mongodb-root
-      roles:
-        - name: Admin
-          db: admin
-        - name: userAdminAnyDatabase
-          db: admin
-      scramCredentialsSecretName: my-scram
-  statefulSet:
-    spec:
-      selector:
-        matchLabels:
-          app: prod-mongodb-svc
-      template:
-        metadata:
-          labels:
-            app: prod-mongodb-svc
-        spec:
-          containers:
-            - name: mongod
-              resources:
-                requests:
-                  cpu: "100m"
-                  memory: "300Mi"
-                limits:
-                  cpu: "200m"
-                  memory: "600Mi"
-            - name: mongodb-agent
-              resources:
-                requests:
-                  cpu: "100m"
-                  memory: "300Mi"
-                limits:
-                  cpu: "200m"
-                  memory: "600Mi"
-      volumeClaimTemplates:
-        - metadata:
-            name: data-volume
-          spec:
-            storageClassName: longhorn-retain
-            accessModes: ["ReadWriteOnce"]
-            resources:
-              requests:
-                storage: 5Gi
-
----
 apiVersion: v1
 kind: Secret
 metadata:
@@ -69,4 +6,58 @@ metadata:
   namespace: {{ NAMESPACE }}
 type: Opaque
 stringData:
-  password: {{ MONGODB_ROOT }}
+  password: "{{ MONGODB_ROOT }}"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb
+  namespace: {{ NAMESPACE }}
+spec:
+  selector:
+    app: mongodb
+  ports:
+    - port: 27017
+      targetPort: 27017
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mongodb
+  namespace: {{ NAMESPACE }}
+spec:
+  serviceName: mongodb
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongodb
+  template:
+    metadata:
+      labels:
+        app: mongodb
+    spec:
+      containers:
+      - name: mongodb
+        image: mongo:6.0.5
+        ports:
+          - containerPort: 27017
+        env:
+          - name: MONGO_INITDB_ROOT_USERNAME
+            value: "root"
+          - name: MONGO_INITDB_ROOT_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: mongodb-root
+                key: password
+        volumeMounts:
+          - name: data
+            mountPath: /data/db
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      storageClassName: longhorn-retain
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 10Gi

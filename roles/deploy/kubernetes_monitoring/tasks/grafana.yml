@@ -1,20 +1,28 @@
 ---
 - name: Grafana Setup
   tags: ["grafana"]
-  block: 
-  - name: Add Grafana chart repo
+  block:
+
+  - name: Add Grafana Helm repo
     kubernetes.core.helm_repository:
       name: grafana
       repo_url: https://grafana.github.io/helm-charts
-      repo_state: "{{ STATE }}"
-      
-  - name: Deploy Grafana helm chart
+      repo_state: present
+
+  - name: Deploy Grafana
     kubernetes.core.helm:
-      name: traefik
-      chart_ref: traefik/traefik
+      name: grafana
+      chart_ref: grafana/grafana
       release_namespace: "{{ NAMESPACE }}"
-      values_files: /var/manifests/traefik-values.yaml
-      release_state: "{{ STATE }}"
+      release_state: present
       wait: true
-    environment: 
+      values:
+        persistence:
+          enabled: true
+          storageClassName: longhorn-retain
+          accessModes:
+            - ReadWriteOnce
+          size: 5Gi
+        adminPassword: "{{ GRAFANA_ADMIN_PASSWORD }}"
+    environment:
       KUBECONFIG: "{{ KUBECONFIG }}"

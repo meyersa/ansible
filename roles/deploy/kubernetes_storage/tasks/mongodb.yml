@@ -1,71 +1,28 @@
-# Test configuration from inside of Kubernetes 
-# kubectl run mongo-test --rm -it --image=mongo -- /bin/bash
-# And then mongosh <connection-string>
----
-- name: MongoDB Setup
+- name: MongoDB Setup (Simple Single Pod)
   tags: ["mongodb"]
-  block: 
-  - name: Add MongoDB chart repo
-    kubernetes.core.helm_repository:
-      name: mongodb
-      repo_url: https://mongodb.github.io/helm-charts
-      repo_state: "{{ STATE }}"
-      
-  - name: Deploy MongoDB helm chart
-    kubernetes.core.helm:
-      name: community-operator
-      chart_ref: mongodb/community-operator
-      release_namespace: "{{ NAMESPACE }}"
-      release_state: "{{ STATE }}"
-      wait: true
-    environment: 
-      KUBECONFIG: "{{ KUBECONFIG }}"
+  block:
 
-  - name: Copy MongoDB Config
-    ansible.builtin.template:
-      src: mongodb.yml.j2
-      dest: /var/manifests/mongodb.yaml
-  
-  - name: Apply MongoDB Config
+  - name: Create MongoDB Secret
     kubernetes.core.k8s:
       kubeconfig: "{{ KUBECONFIG }}"
-      src: /var/manifests/mongodb.yaml
+      definition:
+        apiVersion: v1
+        kind: Secret
+        metadata:
+          name: mongodb-root
+          namespace: "{{ NAMESPACE }}"
+        type: Opaque
+        stringData:
+          password: "{{ MONGODB_ROOT }}"
       state: "{{ STATE }}"
 
-  - name: Apply Mongo Operator Patch
-    when: STATE == "present"
-    block: 
-    - name: Get Operator for Patch
-      kubernetes.core.k8s_info:
-        api_version: apps/v1
-        kind: Deployment
-        namespace: "{{ NAMESPACE }}"
-        name: mongodb-kubernetes-operator
-      register: deployment_info
+  - name: Copy MongoDB manifest
+    ansible.builtin.template:
+      src: mongodb.yml.j2
+      dest: /var/manifests/mongodb.yml
 
-    - name: Extract current image for Patch
-      set_fact:
-        current_image: "{{ deployment_info.resources[0].spec.template.spec.containers[0].image }}"
-
-    # - name: Patch MongoDB Operator Deployment
-    #   kubernetes.core.k8s:
-    #     state: patched
-    #     kind: Deployment
-    #     api_version: apps/v1
-    #     namespace: "{{ NAMESPACE }}"
-    #     name: mongodb-kubernetes-operator
-    #     definition:
-    #       spec:
-    #         template:
-    #           spec:
-    #             containers:
-    #               - name: mongodb-kubernetes-operator
-    #                 image: "{{ current_image }}"
-    #                 resources:
-    #                   requests:
-    #                     cpu: "200m"
-    #                     memory: "250Mi"
-    #                   limits:
-    #                     cpu: "500m"
-    #                     memory: "750Mi"
-    #     merge_type: merge
+  - name: Apply MongoDB StatefulSet + Service
+    kubernetes.core.k8s:
+      kubeconfig: "{{ KUBECONFIG }}"
+      src: /var/manifests/mongodb.yml
+      state: "{{ STATE }}"

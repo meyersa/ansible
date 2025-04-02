@@ -1,4 +1,3 @@
-# https://github.com/mariadb-operator/mariadb-operator/blob/main/docs/API_REFERENCE.md
 ---
 apiVersion: v1
 kind: Secret
@@ -6,29 +5,57 @@ metadata:
   name: mariadb-root
   namespace: {{ NAMESPACE }}
 type: Opaque
-data:
-  password: {{ MARIADB_ROOT | b64encode }}
-
+stringData:
+  password: "{{ MARIADB_ROOT }}"
 ---
-apiVersion: k8s.mariadb.com/v1alpha1
-kind: MariaDB
+apiVersion: v1
+kind: Service
 metadata:
   name: mariadb
   namespace: {{ NAMESPACE }}
-  labels:
-    app: mariadb
 spec:
-  rootPasswordSecretKeyRef:
-    name: mariadb-root
-    key: password
-  storage:
-    size: 5Gi
-    storageClassName: longhorn-retain
-  resources:
-    requests:
-      cpu: 100m
-      memory: 128Mi
-    limits:
-      cpu: 200m
-      memory: 500Mi
-  image: docker-registry1.mariadb.com/library/mariadb
+  selector:
+    app: mariadb
+  ports:
+    - port: 3306
+      targetPort: 3306
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mariadb
+  namespace: {{ NAMESPACE }}
+spec:
+  serviceName: mariadb
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mariadb
+  template:
+    metadata:
+      labels:
+        app: mariadb
+    spec:
+      containers:
+      - name: mariadb
+        image: mariadb:10.11
+        env:
+          - name: MARIADB_ROOT_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: mariadb-root
+                key: password
+        ports:
+          - containerPort: 3306
+        volumeMounts:
+          - name: data
+            mountPath: /var/lib/mysql
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      storageClassName: longhorn-retain
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 5Gi

@@ -13,4 +13,6 @@
       name: "{{ NAMESPACE }}"
       kind: Namespace
 
-  - import_tasks: grafana.yml
+  # - import_tasks: grafana.yml
+
+  - import_tasks: loki.yml

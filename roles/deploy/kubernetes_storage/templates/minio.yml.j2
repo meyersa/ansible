@@ -1,0 +1,65 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio
+  namespace: {{ NAMESPACE }}
+spec:
+  selector:
+    app: minio
+  ports:
+    - port: 9000
+      name: api
+    - port: 9090
+      name: console
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: minio
+  namespace: {{ NAMESPACE }}
+spec:
+  serviceName: minio
+  replicas: 1
+  selector:
+    matchLabels:
+      app: minio
+  template:
+    metadata:
+      labels:
+        app: minio
+    spec:
+      containers:
+      - name: minio
+        image: quay.io/minio/minio:latest
+        args:
+          - server
+          - /data
+          - --console-address
+          - ":9090"
+        env:
+          - name: MINIO_ROOT_USER
+            valueFrom:
+              secretKeyRef:
+                name: minio-creds
+                key: accesskey
+          - name: MINIO_ROOT_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: minio-creds
+                key: secretkey
+        ports:
+          - containerPort: 9000
+          - containerPort: 9090
+        volumeMounts:
+          - name: data
+            mountPath: /data
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      storageClassName: longhorn-retain
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 10Gi

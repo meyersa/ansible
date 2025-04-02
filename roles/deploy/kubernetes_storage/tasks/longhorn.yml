@@ -36,25 +36,11 @@
 
   - name: Copy LongHorn StorageClass
     ansible.builtin.template:
-      src: longhorn-storageclass.yml.j2
-      dest: /var/manifests/longhorn-storageclass.yml
+      src: longhorn.yml.j2
+      dest: /var/manifests/longhorn.yml
   
   - name: Apply LongHorn StorageClass
     kubernetes.core.k8s:
       kubeconfig: "{{ KUBECONFIG }}"
-      src: /var/manifests/longhorn-storageclass.yml
+      src: /var/manifests/longhorn.yml
       state: "{{ STATE }}"
-
-  - name: Set LongHorn delete settings 
-    when: STATE == "present"
-    block: 
-    - name: Copy LongHorn Settings
-      ansible.builtin.template:
-        src: longhorn-settings.yml.j2
-        dest: /var/manifests/longhorn-settings.yml
-    
-    - name: Apply LongHorn Settings
-      kubernetes.core.k8s:
-        kubeconfig: "{{ KUBECONFIG }}"
-        src: /var/manifests/longhorn-settings.yml
-        state: "{{ STATE }}"

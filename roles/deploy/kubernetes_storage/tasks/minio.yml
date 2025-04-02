@@ -1,47 +1,35 @@
----
-- name: Minio Setup
-  tags: ["Minio"]
-  block: 
-  - name: Add Minio chart repo
-    kubernetes.core.helm_repository:
-      name: minio-operator
-      repo_url: https://operator.min.io
-      repo_state: "{{ STATE }}"
-      
-  # https://raw.githubusercontent.com/minio/operator/master/helm/tenant/values.yaml
-  - name: Copy Minio Values
-    ansible.builtin.template:
-      src: minio-values.yml.j2
-      dest: /var/manifests/minio-values.yaml
-  
-  - name: Deploy Minio Operator 
-    kubernetes.core.helm:
-      name: minio-operator
-      chart_ref: minio-operator/operator
-      release_namespace: "{{ NAMESPACE }}"
-      release_state: "{{ STATE }}"
-      wait: true
-    environment: 
-      KUBECONFIG: "{{ KUBECONFIG }}"
+- name: Minio Setup (Single Node)
+  tags: ["minio"]
+  block:
+  - name: Install Minio Client 
+    ansible.builtin.apt:
+      name:
+        - mc
+      state: present
+      update_cache: true
 
-  - name: Deploy Minio Tenant
-    kubernetes.core.helm:
-      name: minio-operator
-      chart_ref: minio-operator/tenant
-      release_namespace: "{{ NAMESPACE }}"
-      release_state: "{{ STATE }}"
-      values_files: /var/manifests/minio-values.yaml
-      wait: true
-    environment: 
-      KUBECONFIG: "{{ KUBECONFIG }}"
-
-  - name: Copy Minio Creds
-    ansible.builtin.template:
-      src: minio-settings.yml.j2
-      dest: /var/manifests/minio-settings.yaml
-  
-  - name: Apply Minio Config
+  - name: Create MinIO Secret
     kubernetes.core.k8s:
       kubeconfig: "{{ KUBECONFIG }}"
-      src: /var/manifests/minio-settings.yaml
+      definition:
+        apiVersion: v1
+        kind: Secret
+        metadata:
+          name: minio-creds
+          namespace: "{{ NAMESPACE }}"
+        type: Opaque
+        stringData:
+          accesskey: "{{ MINIO_ACCESS_KEY }}"
+          secretkey: "{{ MINIO_SECRET_KEY }}"
+      state: "{{ STATE }}"
+
+  - name: Copy MinIO manifest
+    ansible.builtin.template:
+      src: minio.yml.j2
+      dest: /var/manifests/minio.yml
+
+  - name: Apply MinIO Deployment
+    kubernetes.core.k8s:
+      kubeconfig: "{{ KUBECONFIG }}"
+      src: /var/manifests/minio.yml
       state: "{{ STATE }}"

@@ -1,44 +1,28 @@
-# Test from inside Kubernetes pod 
-# kubectl run mariadb-test --rm -it --image=mariadb -- /bin/bash
-# And then mariadb -h <service-name> -P <port> -u <username> -p
----
-- name: MariaDB Setup
+- name: MariaDB Setup (Simple Single Pod)
   tags: ["mariadb"]
-  block: 
-  - name: Add MariaDB chart repo
-    kubernetes.core.helm_repository:
-      name: mariadb-operator
-      repo_url: https://helm.mariadb.com/mariadb-operator
-      repo_state: "{{ STATE }}"
-      
-  - name: Deploy MariaDB CRD helm chart
-    kubernetes.core.helm:
-      name: mariadb-operator-crds
-      chart_ref: mariadb-operator/mariadb-operator-crds
-      release_namespace: "{{ NAMESPACE }}"
-      release_state: "{{ STATE }}"
-      wait: true
-    environment: 
-      KUBECONFIG: "{{ KUBECONFIG }}"
+  block:
 
-  - name: Deploy MariaDB helm chart
-    kubernetes.core.helm:
-      name: mariadb-operator
-      chart_ref: mariadb-operator/mariadb-operator
-      release_namespace: "{{ NAMESPACE }}"
-      release_state: "{{ STATE }}"
-      wait: true
-    environment: 
-      KUBECONFIG: "{{ KUBECONFIG }}"
-
-  - name: Copy MariaDB Config
-    ansible.builtin.template:
-      src: mariadb.yml.j2
-      dest: /var/manifests/mariadb.yaml
-  
-  - name: Apply MariaDB Config
+  - name: Create MariaDB Secret
     kubernetes.core.k8s:
       kubeconfig: "{{ KUBECONFIG }}"
-      src: /var/manifests/mariadb.yaml
+      definition:
+        apiVersion: v1
+        kind: Secret
+        metadata:
+          name: mariadb-root
+          namespace: "{{ NAMESPACE }}"
+        type: Opaque
+        stringData:
+          password: "{{ MARIADB_ROOT }}"
       state: "{{ STATE }}"
-    retries: 3
+
+  - name: Copy MariaDB manifest
+    ansible.builtin.template:
+      src: mariadb.yml.j2
+      dest: /var/manifests/mariadb.yml
+
+  - name: Apply MariaDB StatefulSet + Service
+    kubernetes.core.k8s:
+      kubeconfig: "{{ KUBECONFIG }}"
+      src: /var/manifests/mariadb.yml
+      state: "{{ STATE }}"
