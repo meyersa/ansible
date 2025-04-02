@@ -1,0 +1,45 @@
+http:
+  routers:
+    default-websecure:
+      entryPoints:
+        - websecure
+      middlewares:
+        - secure-headers
+        - secure-ratelimit
+      tls:
+        certResolver: myresolver
+
+    default-apisecure:
+      entryPoints:
+        - apisecure
+      middlewares:
+        - secure-headers
+        - api-ratelimit
+      tls:
+        certResolver: myresolver
+
+  middlewares:
+    secure-ratelimit:
+      rateLimit:
+        average: 100
+        burst: 50
+
+    api-ratelimit:
+      rateLimit:
+        average: 500
+        burst: 200
+
+    secure-headers:
+      headers:
+        customResponseHeaders:
+          server: Traefik
+        sslRedirect: true
+        stsSeconds: 315360000
+        stsIncludeSubdomains: true
+        stsPreload: true
+        forceSTSHeader: true
+
+    noindex-header:
+      headers:
+        customResponseHeaders:
+          X-Robots-Tag: "noindex, nofollow"

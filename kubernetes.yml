@@ -1,7 +1,0 @@
----
-- name: Kubernetes Install
-  hosts: prod
-  become: true
-  vars: 
-  roles: 
-    - deploy/kubernetes

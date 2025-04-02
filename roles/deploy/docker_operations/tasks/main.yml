@@ -1,0 +1,5 @@
+---
+- name: "Operations"
+  tags: ["operations"]
+  block: 
+    - import_tasks: traefik.yml

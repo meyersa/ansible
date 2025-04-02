@@ -1,0 +1,70 @@
+---
+- name: Traefik
+  tags: ["traefik"]
+  vars: 
+    TRAEFIK_CONFIG_DIR: "{{ CONFIG_DIR }}/traefik"
+  block:
+  - name: Ensure traefik docker network exists
+    community.docker.docker_network:
+      name: traefik
+
+  - name: Ensure traefik config directory exists
+    ansible.builtin.file:
+      path: "{{ TRAEFIK_CONFIG_DIR }}"
+      state: directory
+      mode: '0755'
+
+  - name: Deploy traefik dynamic config
+    ansible.builtin.template:
+      src: dynamic_conf.yaml.j2
+      dest: "{{ TRAEFIK_CONFIG_DIR }}/dynamic_conf.yaml"
+      mode: '0644'
+
+  - name: Deploy Traefik container
+    community.docker.docker_container:
+      name: traefik
+      image: traefik:latest
+      restart_policy: always
+      networks:
+        - name: traefik
+      published_ports:
+        - "80:80"
+        - "443:443"
+        - "8080:8080"
+        - "8082:8082"
+      volumes:
+        - /var/run/docker.sock:/var/run/docker.sock:ro
+        - "{{ TRAEFIK_CONFIG_DIR }}/letsencrypt:/letsencrypt"
+        - "{{ TRAEFIK_CONFIG_DIR }}/dynamic_conf.yaml:/config/dynamic_conf.yaml"
+      command:
+        # Basic
+        - "--log.level=DEBUG"
+        - "--api.insecure=true"
+        - "--accesslog=true"
+        - "--metrics.prometheus=true"
+        - "--metrics.prometheus.entrypoint=metrics"
+        
+        # Providers
+        - "--providers.docker=true"
+        - "--providers.docker.exposedbydefault=false"
+        - "--providers.file.directory=/config"
+        - "--providers.file.watch=true"
+
+        # Entrypoints
+        - "--entrypoints.web.address=:80"
+        - "--entrypoints.websecure.address=:443"
+        - "--entrypoints.websecure.reusePort=true"
+        - "--entrypoints.apisecure.address=:443"
+        - "--entrypoints.apisecure.reusePort=true"
+        - "--entrypoints.metrics.address=:8082"
+        - "--entryPoints.web.forwardedHeaders.trustedIPs=127.0.0.1/32,172.16.0.0/12"
+        - "--entryPoints.websecure.forwardedHeaders.trustedIPs=127.0.0.1/32,172.16.0.0/12"
+        - "--entryPoints.apisecure.forwardedHeaders.trustedIPs=127.0.0.1/32,172.16.0.0/12"
+        - "--entryPoints.web.http.redirections.entryPoint.to=websecure"
+        - "--entryPoints.web.http.redirections.entryPoint.scheme=https"
+
+        # LetsEncrypt
+        - "--certificatesresolvers.myresolver.acme.httpchallenge=true"
+        - "--certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web"
+        - "--certificatesresolvers.myresolver.acme.email={{ TLS_EMAIL }}"
+        - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"

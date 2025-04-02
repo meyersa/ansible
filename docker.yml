@@ -1,0 +1,12 @@
+---
+- name: Docker Install
+  hosts: dev
+  become: true
+  any_errors_fatal: true
+  vars: 
+    reboot: true
+    STATE: "present"
+  roles: 
+    # - configure
+    - deploy/docker_operations
+    - deploy/docker_apps
