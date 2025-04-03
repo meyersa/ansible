@@ -3,6 +3,7 @@
   tags: ["grafana"]
   vars:
     GRAFANA_DATA_DIR: "{{ DATA_DIR }}/grafana"
+    GRAFANA_CONFIG_DIR: "{{ CONFIG_DIR }}/grafana"
     GRAFANA_URL: "dash.{{ BACKEND_DOMAIN }}"
   block:
     - name: Create Grafana data directory
@@ -12,6 +13,24 @@
         owner: 472
         group: 472
         mode: '0755'
+
+    - name: Create Grafana config directory
+      file:
+        path: "{{ GRAFANA_CONFIG_DIR }}"
+        state: directory
+        owner: 472
+        group: 472
+        mode: '0755'
+
+    - name: Copy Grafana provisioning files
+      copy:
+        src: "{{ playbook_dir }}/grafana_provisioning/"
+        dest: "{{ GRAFANA_CONFIG_DIR }}/provisioning/"
+        owner: 472
+        group: 472
+        mode: 0644
+        directory_mode: 0755
+      register: provisioning_copy_result
 
     - name: Add Grafana container
       docker_container:
@@ -25,36 +44,27 @@
           - name: mimir
         volumes:
           - "{{ GRAFANA_DATA_DIR }}:/var/lib/grafana"
+          - "{{ GRAFANA_CONFIG_DIR }}/provisioning:/etc/grafana/provisioning"
         env: 
+          GF_SERVER_DOMAIN: "{{ GRAFANA_URL }}" 
+          GF_SERVER_ROOT_URL: "https://{{ GRAFANA_URL }}/"
           GF_SECURITY_ADMIN_USER: "{{ GRAFANA_USER }}"
           GF_SECURITY_ADMIN_PASSWORD: "{{ GRAFANA_PASS }}"
           GF_DEFAULT_INSTANCE_NAME: "{{ ENVIRONMENT | capitalize}}"
           GF_WELCOME_ENABLED: "false"
           GF_FEATURE_TOGGLES_ENABLE: "publicDashboards"
           GF_ANALYTICS_ENABLED: "false"
+          GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: "/etc/grafana/provisioning/dashboards/jsons/System_Stats.json"
+          DISCORD_WEBHOOK_URL: "{{ GF_DISCORD_WEBHOOK }}"
         labels:
           traefik.enable: "true"
           traefik.http.routers.grafana.rule: "Host(`{{ GRAFANA_URL }}`)"
           traefik.http.routers.grafana.entrypoints: "websecure"
           traefik.http.services.grafana.loadbalancer.server.port: "3000"
-          
-    - name: Add Mimir Data Source 
-      community.grafana.grafana_datasource: 
-        name: Mimir
-        grafana_url: "https://{{ GRAFANA_URL }}"
-        grafana_user: "{{ GRAFANA_USER }}"
-        grafana_password: "{{ GRAFANA_PASS }}"
-        ds_type: prometheus
-        ds_url: http://mimir:9090/prometheus
-        is_default: true
-        additional_json_data: 
-          prometheusType: Mimir
-        
-    - name: Add Loki Data Source 
-      community.grafana.grafana_datasource: 
-        name: Loki
-        grafana_url: "https://{{ GRAFANA_URL }}"
-        grafana_user: "{{ GRAFANA_USER }}"
-        grafana_password: "{{ GRAFANA_PASS }}"
-        ds_type: loki
-        ds_url: http://loki:3100
+      register: grafana_container_result
+
+    - name: Restart Grafana if provisioning changed but container didn’t
+      docker_container:
+        name: grafana
+        restart: true
+      when: provisioning_copy_result.changed and not grafana_container_result.changed

@@ -1,0 +1,10 @@
+apiVersion: 1
+contactPoints:
+    - orgId: 1
+      name: Discord
+      receivers:
+        - uid: dehu0c5ctid4wd
+          type: slack
+          settings:
+            url: ${DISCORD_WEBHOOK_URL}/slack
+          disableResolveMessage: false

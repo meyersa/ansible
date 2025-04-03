@@ -1,0 +1,250 @@
+apiVersion: 1
+groups:
+    - orgId: 1
+      name: Constant
+      folder: Hosts
+      interval: 1m
+      rules:
+        - uid: behu0enji18n4f
+          title: CPU Usage
+          condition: C
+          data:
+            - refId: A
+              relativeTimeRange:
+                from: 1800
+                to: 0
+              datasourceUid: mimir
+              model:
+                adhocFilters: []
+                datasource:
+                    type: prometheus
+                    uid: mimir
+                disableTextWrap: false
+                editorMode: code
+                expr: 'sum by(instance) (rate(node_cpu_seconds_total{mode!="idle"}[5m])) / sum by(instance) (rate(node_cpu_seconds_total[5m])) * 100 '
+                fullMetaSearch: false
+                includeNullMetadata: true
+                instant: true
+                interval: ""
+                intervalMs: 15000
+                legendFormat: __auto
+                maxDataPoints: 43200
+                range: false
+                refId: A
+                useBackend: false
+            - refId: C
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params:
+                            - 80
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - C
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: A
+                intervalMs: 1000
+                maxDataPoints: 43200
+                refId: C
+                type: threshold
+          dashboardUid: cehtln7abzjeoc
+          panelId: 1
+          noDataState: NoData
+          execErrState: Error
+          for: 3m
+          annotations:
+            __dashboardUid__: cehtln7abzjeoc
+            __panelId__: "1"
+            summary: High CPU
+          isPaused: false
+          notification_settings:
+            receiver: Discord
+        - uid: dehu0wbd7kx6oc
+          title: Memory Usage
+          condition: C
+          data:
+            - refId: A
+              relativeTimeRange:
+                from: 1800
+                to: 0
+              datasourceUid: mimir
+              model:
+                adhocFilters: []
+                datasource:
+                    type: prometheus
+                    uid: mimir
+                disableTextWrap: false
+                editorMode: code
+                expr: sum by(instance) (1 - (node_memory_MemAvailable_bytes{job="integrations/unix"} / node_memory_MemTotal_bytes{job="integrations/unix"})) * 100
+                fullMetaSearch: false
+                includeNullMetadata: true
+                instant: true
+                interval: ""
+                intervalMs: 15000
+                legendFormat: __auto
+                maxDataPoints: 43200
+                range: false
+                refId: A
+                useBackend: false
+            - refId: C
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params:
+                            - 80
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - C
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: A
+                intervalMs: 1000
+                maxDataPoints: 43200
+                refId: C
+                type: threshold
+          dashboardUid: cehtln7abzjeoc
+          panelId: 2
+          noDataState: NoData
+          execErrState: Error
+          for: 3m
+          annotations:
+            __dashboardUid__: cehtln7abzjeoc
+            __panelId__: "2"
+            summary: High Memory Usage
+          isPaused: false
+          notification_settings:
+            receiver: Discord
+        - uid: fehu0y1haoohsf
+          title: Disk Space Usage
+          condition: C
+          data:
+            - refId: A
+              relativeTimeRange:
+                from: 1800
+                to: 0
+              datasourceUid: mimir
+              model:
+                adhocFilters: []
+                datasource:
+                    type: prometheus
+                    uid: mimir
+                disableTextWrap: false
+                editorMode: code
+                expr: sum by(instance) (100 - (node_filesystem_free_bytes{mountpoint="/", job="integrations/unix"} / node_filesystem_size_bytes{mountpoint="/", job="integrations/unix"} * 100))
+                fullMetaSearch: false
+                includeNullMetadata: true
+                instant: true
+                interval: ""
+                intervalMs: 15000
+                legendFormat: __auto
+                maxDataPoints: 43200
+                range: false
+                refId: A
+                useBackend: false
+            - refId: C
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params:
+                            - 80
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - C
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: A
+                intervalMs: 1000
+                maxDataPoints: 43200
+                refId: C
+                type: threshold
+          dashboardUid: cehtln7abzjeoc
+          panelId: 4
+          noDataState: NoData
+          execErrState: Error
+          for: 3m
+          annotations:
+            __dashboardUid__: cehtln7abzjeoc
+            __panelId__: "4"
+            summary: Low space on host
+          isPaused: false
+          notification_settings:
+            receiver: Discord
+        - uid: fehu16jr6hmv4a
+          title: Host Change
+          condition: C
+          data:
+            - refId: A
+              relativeTimeRange:
+                from: 600
+                to: 0
+              datasourceUid: mimir
+              model:
+                editorMode: code
+                expr: max_over_time(up{job="integrations/unix"}[1h]) unless up
+                instant: true
+                intervalMs: 1000
+                legendFormat: __auto
+                maxDataPoints: 43200
+                range: false
+                refId: A
+            - refId: C
+              datasourceUid: __expr__
+              model:
+                conditions:
+                    - evaluator:
+                        params:
+                            - 0
+                        type: gt
+                      operator:
+                        type: and
+                      query:
+                        params:
+                            - C
+                      reducer:
+                        params: []
+                        type: last
+                      type: query
+                datasource:
+                    type: __expr__
+                    uid: __expr__
+                expression: A
+                intervalMs: 1000
+                maxDataPoints: 43200
+                refId: C
+                type: threshold
+          noDataState: OK
+          execErrState: Alerting
+          for: 3m
+          annotations:
+            summary: Host is down
+          isPaused: false
+          notification_settings:
+            receiver: Discord
