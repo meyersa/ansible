@@ -1,9 +1,0 @@
----
-- name: Install Docker Core Apps
-  tags: ["docker-apps"]
-  block:
-    # Auto updater
-    - import_tasks: watchtower.yml
-
-    # Cloudflared Proxy
-    - import_tasks: cloudflared.yml
