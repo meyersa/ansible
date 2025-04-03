@@ -1,0 +1,109 @@
+- name: Mimir
+  tags: ["mimir"]
+  vars:
+    MIMIR_DATA_DIR: "{{ DATA_DIR }}/mimir"
+    MIMIR_CONFIG_DIR: "{{ CONFIG_DIR }}/mimir"
+    MIMIR_CREDS_FILE: "{{ MIMIR_CONFIG_DIR }}/creds.env"
+  block:
+    - name: Create Mimir network
+      docker_network:
+        name: mimir
+
+    - name: Create Mimir data directory
+      file:
+        path: "{{ MIMIR_DATA_DIR }}"
+        state: directory
+        owner: 10001
+        group: 10001
+        mode: "0755"
+
+    - name: Create Mimir config directory
+      file:
+        path: "{{ MIMIR_CONFIG_DIR }}"
+        state: directory
+        owner: 10001
+        group: 10001
+        mode: "0755"
+
+    - name: Deploy Mimir config
+      template:
+        src: mimir-config.yaml.j2
+        dest: "{{ MIMIR_CONFIG_DIR }}/local-config.yaml"
+        owner: 10001
+        group: 10001
+        mode: "0644"
+      register: mimir_config_result
+
+    # TODO: Consolidate this into a workflow
+    - name: Copy setup-minio.sh into config dir
+      copy:
+        dest: "{{ MIMIR_CONFIG_DIR }}/setup-minio.sh"
+        mode: "0755"
+        content: |
+          #!/bin/sh
+          set -e
+          export MC_HOST_s3=http://{{ MINIO_ROOT_USER }}:{{ MINIO_ROOT_PASSWORD }}@minio:9000
+          mc admin user info s3 {{ MIMIR_ACCESS_KEY }} > /dev/null 2>&1 || mc admin user add s3 {{ MIMIR_ACCESS_KEY }} {{ MIMIR_SECRET_KEY }}
+          mc ls s3/{{ MIMIR_ACCESS_KEY }} > /dev/null 2>&1 || mc mb s3/{{ MIMIR_ACCESS_KEY }}
+          mc admin policy info s3 mimir-policy > /dev/null 2>&1 || mc admin policy create s3 mimir-policy /mimir-policy.json
+          mc admin policy attach s3 mimir-policy --user={{ MIMIR_ACCESS_KEY }}
+
+    - name: Copy mimir-policy.json
+      copy:
+        dest: "{{ MIMIR_CONFIG_DIR }}/mimir-policy.json"
+        content: |
+          {
+            "Version": "2012-10-17",
+            "Statement": [{
+              "Effect": "Allow",
+              "Action": ["s3:*"],
+              "Resource": ["arn:aws:s3:::mimir", "arn:aws:s3:::mimir/*"]
+            }]
+          }
+        mode: "0600"
+
+    - name: Run setup-minio.sh inside mc container
+      docker_container:
+        name: minio-mc-runner
+        image: minio/mc
+        entrypoint: ["/bin/sh", "-c"]
+        command: "/{{ MIMIR_CONFIG_DIR }}/setup-minio.sh"
+        volumes:
+          - "{{ MIMIR_CONFIG_DIR }}/setup-minio.sh:/{{ MIMIR_CONFIG_DIR }}/setup-minio.sh"
+          - "{{ MIMIR_CONFIG_DIR }}/mimir-policy.json:/mimir-policy.json"
+        networks:
+          - name: minio
+        auto_remove: yes
+        restart_policy: "no"
+
+    - name: Add Mimir container
+      docker_container:
+        name: mimir
+        image: grafana/mimir:latest
+        state: started
+        restart_policy: unless-stopped
+        networks:
+          - name: mimir
+          - name: traefik
+          - name: minio
+        ports:
+          - "9009:9009"
+        command: -config.file=/etc/mimir/local-config.yaml
+        volumes:
+          - "{{ MIMIR_DATA_DIR }}:/mimir"
+          - "{{ MIMIR_CONFIG_DIR }}/local-config.yaml:/etc/mimir/local-config.yaml"
+        labels:
+          traefik.enable: "true"
+          traefik.http.routers.mimir.rule: "Host(`mimir.{{ BACKEND_DOMAIN }}`)"
+          traefik.http.routers.mimir.entrypoints: "apisecure"
+          traefik.http.services.mimir.loadbalancer.server.port: "9009"
+          traefik.http.middlewares.mimir-auth.basicauth.users: "{{ MIMIR_USER }}:{{ MIMIR_PASS }}"
+          traefik.http.middlewares.mimir-auth.basicauth.removeheader: "true"
+          traefik.http.routers.Mimir.middlewares: "mimir-auth@docker"
+      register: mimir_container_result
+
+    - name: Restart Mimir if config changed but container did not
+      docker_container:
+        name: mimir
+        restart: true
+      when: mimir_config_result.changed and not mimir_container_result.changed
