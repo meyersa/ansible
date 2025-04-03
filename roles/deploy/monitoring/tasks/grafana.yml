@@ -3,6 +3,7 @@
   tags: ["grafana"]
   vars:
     GRAFANA_DATA_DIR: "{{ DATA_DIR }}/grafana"
+    GRAFANA_URL: "dash.{{ BACKEND_DOMAIN }}"
   block:
     - name: Create Grafana data directory
       file:
@@ -27,8 +28,33 @@
         env: 
           GF_SECURITY_ADMIN_USER: "{{ GRAFANA_USER }}"
           GF_SECURITY_ADMIN_PASSWORD: "{{ GRAFANA_PASS }}"
+          GF_DEFAULT_INSTANCE_NAME: "{{ ENVIRONMENT | capitalize}}"
+          GF_WELCOME_ENABLED: "false"
+          GF_FEATURE_TOGGLES_ENABLE: "publicDashboards"
+          GF_ANALYTICS_ENABLED: "false"
         labels:
           traefik.enable: "true"
-          traefik.http.routers.grafana.rule: "Host(`dash.{{ BACKEND_DOMAIN }}`)"
+          traefik.http.routers.grafana.rule: "Host(`{{ GRAFANA_URL }}`)"
           traefik.http.routers.grafana.entrypoints: "websecure"
           traefik.http.services.grafana.loadbalancer.server.port: "3000"
+          
+    - name: Add Mimir Data Source 
+      community.grafana.grafana_datasource: 
+        name: Mimir
+        grafana_url: "https://{{ GRAFANA_URL }}"
+        grafana_user: "{{ GRAFANA_USER }}"
+        grafana_password: "{{ GRAFANA_PASS }}"
+        ds_type: prometheus
+        ds_url: http://mimir:9090/prometheus
+        is_default: true
+        additional_json_data: 
+          prometheusType: Mimir
+        
+    - name: Add Loki Data Source 
+      community.grafana.grafana_datasource: 
+        name: Loki
+        grafana_url: "https://{{ GRAFANA_URL }}"
+        grafana_user: "{{ GRAFANA_USER }}"
+        grafana_password: "{{ GRAFANA_PASS }}"
+        ds_type: loki
+        ds_url: http://loki:3100
