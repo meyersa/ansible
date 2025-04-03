@@ -1,10 +1,7 @@
 ---
-- name: Install Docker
-  tags: ["docker"]
+- name: Install Docker Core Apps
+  tags: ["docker-apps"]
   block:
-    # Install Core Docker Functions
-    - import_tasks: core.yml
-
     # Auto updater
     - import_tasks: watchtower.yml
 

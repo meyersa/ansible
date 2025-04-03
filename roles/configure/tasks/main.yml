@@ -40,6 +40,9 @@
   # Disable Swap
   - import_tasks: swap.yml
 
+  # Install Docker 
+  - import_tasks: docker.yml 
+  
   # Reboot Host
   - import_tasks: ../../util/reboot.yml
     when: reboot is defined and reboot

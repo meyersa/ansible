@@ -1,6 +1,6 @@
 ---
-- name: Install Docker Core
-  tags: ["docker-core"]
+- name: Install Docker
+  tags: ["docker"]
   block:
     - name: Add Docker's official GPG key
       ansible.builtin.apt_key:
