@@ -22,3 +22,37 @@
           image: ghcr.io/meyersa/new-web:latest
           url: "{{ FRONTEND_DOMAIN }}"
           port: 3000
+
+  - name: Deploy TruthRadar
+    include_tasks: _deploy_app.yml
+    vars:
+      app: "truthradar"
+      containers:
+        - name: truthradar
+          image: ghcr.io/meyersa/truthradar:latest
+          url: "truthradar.{{ FRONTEND_DOMAIN }}"
+          port: 3000
+
+  - name: Deploy CampusGrows
+    include_tasks: _deploy_app.yml
+    vars: 
+      app: "campusgrows"
+      containers: 
+        - name: campusgrows
+          image: ghcr.io/meyersa/campusgrows:latest
+          url: "truthradar.{{ FRONTEND_DOMAIN }}"
+          port: 80
+        
+  # - name: Deploy MaxMind
+  #   include_tasks: _deploy_app.yml
+  #   vars: 
+  #     app: "maxmind"
+  #     containers: 
+  #       - name: maxmind
+  #         image: 
+
+  # Needs Storage
+  # ShodanETL
+  # Travel
+  # CloudSCT
+  # IP
