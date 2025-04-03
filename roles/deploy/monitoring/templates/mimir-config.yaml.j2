@@ -1,4 +1,5 @@
 target: all
+multitenancy_enabled: false
 
 server:
   http_listen_port: 9009
@@ -8,14 +9,19 @@ common:
   storage:
     backend: filesystem
     filesystem:
-      directory: /mimir/data
-
+      dir: /mimir/data
 
 blocks_storage:
-  storage_prefix: /mimirblocks
+  storage_prefix: blocks
 
 ruler_storage: 
-  storage_prefix: /mimirruler 
+  storage_prefix: ruler 
+
+ingester:
+  ring:
+    replication_factor: 1
+    kvstore:
+      store: memberlist
 
 limits:
   max_label_name_length: 1024

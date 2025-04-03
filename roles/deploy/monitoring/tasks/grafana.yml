@@ -21,6 +21,7 @@
         networks:
           - name: traefik
           - name: loki
+          - name: mimir
         volumes:
           - "{{ GRAFANA_DATA_DIR }}:/var/lib/grafana"
         env: 
