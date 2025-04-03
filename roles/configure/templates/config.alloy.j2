@@ -33,11 +33,11 @@ prometheus.scrape "engine" {
 
 prometheus.remote_write "prom" {
 	endpoint {
-		url = "{{ ALLOY_CORTEX_URL }}"
+		url = "{{ ALLOY_MIMIR_URL }}"
   
     basic_auth {
-      username = "{{ ALLOY_CORTEX_USER }}"
-      password = "{{ ALLOY_CORTEX_PASS }}"
+      username = "{{ ALLOY_MIMIR_USER }}"
+      password = "{{ ALLOY_MIMIR_PASS }}"
 
     }
 	}
@@ -146,7 +146,7 @@ loki.process "metrics" {
     }
     stage.geoip {
       source  = "connecting_ip"
-      db      = "/etc/alloy/GeoLite2-City.mmdb"
+      db      = "{{ ALLOY_DIR }}/GeoLite2-City.mmdb"
       db_type = "city"
     }
     stage.labels {

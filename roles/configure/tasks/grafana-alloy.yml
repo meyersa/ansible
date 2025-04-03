@@ -1,6 +1,8 @@
 ---
 - name: Install Grafana Alloy for Monitoring
   tags: ["alloy"]
+  vars: 
+    ALLOY_DIR: /etc/alloy
   block:
     - name: Set Alloy hostname 
       set_fact: 
@@ -8,7 +10,7 @@
 
     - name: Create a directory for config if it does not exist
       ansible.builtin.file:
-        path: /etc/alloy/
+        path: "{{ ALLOY_DIR }}"
         state: directory
         mode: "0755"
 
@@ -16,14 +18,33 @@
     - name: Copy Alloy config
       ansible.builtin.template:
         src: config.alloy.j2
-        dest: /etc/alloy/config.alloy
+        dest: "{{ ALLOY_DIR }}/config.alloy"
         force: yes
 
-    - name: Download the GeoDB
-      get_url:
-        url: https://github.com/meyersa/common/raw/main/maxmind/GeoLite2-City.mmdb
-        dest: /etc/alloy/GeoLite2-City.mmdb
-        mode: '0755'
+    - name: Check if GeoLite2-City directory exists
+      ansible.builtin.stat:
+        path: "{{ ALLOY_DIR }}/GeoLite2-City.mmdb"
+      register: geoip_dir
+
+    - name: Download GeoLite2-City database if not extracted
+      ansible.builtin.get_url:
+        url: "https://download.maxmind.com/geoip/databases/GeoLite2-City/download?suffix=tar.gz"
+        dest: "/tmp/GeoLite2-City.tar.gz"
+        username: "{{ ALLOY_MAXMIND_ID }}"
+        password: "{{ ALLOY_MAXMIND_KEY }}"
+      when: not geoip_dir.stat.exists
+
+    - name: Extract GeoLite2-City database
+      ansible.builtin.unarchive:
+        src: "/tmp/GeoLite2-City.tar.gz"
+        dest: "{{ ALLOY_DIR }}"
+        remote_src: yes
+        extra_opts:
+          - --wildcards
+          - --strip-components=1
+        include:
+          - "*/GeoLite2-City.mmdb"
+      when: not geoip_dir.stat.exists
 
     - name: Add Grafana's official GPG key
       ansible.builtin.apt_key:
