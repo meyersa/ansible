@@ -3,7 +3,7 @@
   tags: ["apps"]
   block:
   - name: Deploy whoami
-    include_tasks: _deploy_app.yml
+    include_tasks: roles/util/tasks/deploy_app.yml
     when: ENVIRONMENT == "dev"
     vars: 
       app: "whoami"
@@ -14,7 +14,7 @@
           port: 80
 
   - name: Deploy meyersa
-    include_tasks: _deploy_app.yml
+    include_tasks: roles/util/tasks/deploy_app.yml
     vars:
       app: "meyersa"
       containers:
@@ -24,7 +24,7 @@
           port: 3000
 
   - name: Deploy TruthRadar
-    include_tasks: _deploy_app.yml
+    include_tasks: roles/util/tasks/deploy_app.yml
     vars:
       app: "truthradar"
       containers:
@@ -38,10 +38,10 @@
             - "OPENAI_API_KEY: {{ TR_OA_KEY }}"
             - "API_KEY: {{ TR_KEY }}"
             - "MONGO_DB: {{ TR_MONGO_DB }}"
-            - "MONGO_URL: {{ TR_MONGO_DB }}"
+            - "MONGO_URL: {{ TR_MONGO_URL }}"
 
   - name: Deploy CampusGrows
-    include_tasks: _deploy_app.yml
+    include_tasks: roles/util/tasks/deploy_app.yml
     vars: 
       app: "campusgrows"
       containers: 
@@ -51,7 +51,7 @@
           port: 80
         
   # - name: Deploy MaxMind
-  #   include_tasks: _deploy_app.yml
+  #   include_tasks: roles/util/tasks/deploy_app.yml
   #   vars: 
   #     app: "maxmind"
   #     containers: 

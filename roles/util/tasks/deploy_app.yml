@@ -1,3 +1,4 @@
+---
 - name: Deploy {{ app }}
   tags: ["{{ app }}"]
   vars: 
@@ -13,7 +14,7 @@
 
     - name: Create Compose for {{ app }}
       template:
-        src: docker-compose.yml.j2
+        src: roles/util/templates/docker-compose.yml.j2
         dest: "{{ APP_PATH }}/docker-compose.yml"
 
     - name: Start {{ app }}
