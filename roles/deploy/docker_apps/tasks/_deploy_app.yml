@@ -1,0 +1,21 @@
+- name: Deploy {{ app }}
+  tags: ["{{ app }}"]
+  vars: 
+    APP_PATH: "/etc/{{ app }}"
+  block:
+    - name: Create {{ app }} data directory
+      file:
+        path: "{{ APP_PATH }}"
+        state: directory
+        owner: 472
+        group: 472
+        mode: '0755'
+
+    - name: Create Compose for {{ app }}
+      template:
+        src: docker-compose.yml.j2
+        dest: "{{ APP_PATH }}/docker-compose.yml"
+
+    - name: Start {{ app }}
+      community.docker.docker_compose_v2:
+        project_src: "{{ APP_PATH }}"

@@ -1,1 +1,24 @@
-- import_tasks: whoami.yml
+---
+- name: Deploy Docker Applications
+  tags: ["apps"]
+  block:
+  - name: Deploy whoami
+    include_tasks: _deploy_app.yml
+    when: ENVIRONMENT == "dev"
+    vars: 
+      app: "whoami"
+      containers: 
+        - name: whoami
+          image: traefik/whoami
+          url: whoami.{{ FRONTEND_DOMAIN}}
+          port: 80
+
+  - name: Deploy meyersa
+    include_tasks: _deploy_app.yml
+    vars:
+      app: "meyersa"
+      containers:
+        - name: meyersa
+          image: ghcr.io/meyersa/new-web:latest
+          url: "{{ FRONTEND_DOMAIN }}"
+          port: 3000
