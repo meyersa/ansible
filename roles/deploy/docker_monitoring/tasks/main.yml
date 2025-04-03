@@ -1,0 +1,7 @@
+---
+- name: Docker Monitoring
+  tags: ["monitoring"]
+  block: 
+    - import_tasks: grafana.yml
+
+    - import_tasks: loki.yml
