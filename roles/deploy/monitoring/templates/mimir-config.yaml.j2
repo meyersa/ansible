@@ -6,23 +6,20 @@ server:
 
 common:
   storage:
-    backend: s3
-    s3:
-      endpoint: minio:9000
-      access_key_id: "{{ MIMIR_ACCESS_KEY }}"
-      secret_access_key: "{{ MIMIR_SECRET_KEY }}"
-      bucket_name: mimir
-      region: us-east-1
-      insecure: true
+    backend: filesystem
+    filesystem:
+      directory: /mimir/data
+
 
 blocks_storage:
-  storage_prefix: blocks
+  storage_prefix: /mimirblocks
 
 ruler_storage: 
-  storage_prefix: ruler 
+  storage_prefix: /mimirruler 
 
 limits:
   max_label_name_length: 1024
   max_label_value_length: 2048
   max_label_names_per_series: 30
   compactor_blocks_retention_period: {{ '168h' if ENVIRONMENT == 'dev' else '0s' }}
+

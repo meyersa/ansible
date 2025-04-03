@@ -35,47 +35,6 @@
         mode: "0644"
       register: loki_config_result
 
-    - name: Copy setup-minio.sh into config dir
-      copy:
-        dest: "{{ LOKI_CONFIG_DIR }}/setup-minio.sh"
-        mode: "0755"
-        content: |
-          #!/bin/sh
-          set -e
-          export MC_HOST_s3=http://{{ MINIO_ROOT_USER }}:{{ MINIO_ROOT_PASSWORD }}@minio:9000
-          mc admin user info s3 {{ LOKI_ACCESS_KEY }} > /dev/null 2>&1 || mc admin user add s3 {{ LOKI_ACCESS_KEY }} {{ LOKI_SECRET_KEY }}
-          mc ls s3/{{ LOKI_ACCESS_KEY }} > /dev/null 2>&1 || mc mb s3/{{ LOKI_ACCESS_KEY }}
-          mc admin policy info s3 loki-policy > /dev/null 2>&1 || mc admin policy create s3 loki-policy /loki-policy.json
-          mc admin policy attach s3 loki-policy --user={{ LOKI_ACCESS_KEY }}
-
-    - name: Copy loki-policy.json
-      copy:
-        dest: "{{ LOKI_CONFIG_DIR }}/loki-policy.json"
-        content: |
-          {
-            "Version": "2012-10-17",
-            "Statement": [{
-              "Effect": "Allow",
-              "Action": ["s3:*"],
-              "Resource": ["arn:aws:s3:::loki", "arn:aws:s3:::loki/*"]
-            }]
-          }
-        mode: "0600"
-
-    - name: Run setup-minio.sh inside mc container
-      docker_container:
-        name: minio-mc-runner
-        image: minio/mc
-        entrypoint: ["/bin/sh", "-c"]
-        command: "/{{ LOKI_CONFIG_DIR }}/setup-minio.sh"
-        volumes:
-          - "{{ LOKI_CONFIG_DIR }}/setup-minio.sh:/{{ LOKI_CONFIG_DIR }}/setup-minio.sh"
-          - "{{ LOKI_CONFIG_DIR }}/loki-policy.json:/loki-policy.json"
-        networks:
-          - name: minio
-        auto_remove: yes
-        restart_policy: "no"
-
     - name: Add Loki container
       docker_container:
         name: loki
@@ -85,7 +44,6 @@
         networks:
           - name: loki
           - name: traefik
-          - name: minio
         ports:
           - "3100:3100"
         command: -config.file=/etc/loki/local-config.yaml
