@@ -1,6 +1,6 @@
-logging { 
-  level   = "error" 
-  format  = "logfmt"
+logging {
+  level  = "info"
+  format = "logfmt"
 }
 
 discovery.docker "containers" {
@@ -8,114 +8,182 @@ discovery.docker "containers" {
   port = 12345
 }
 
+// Relabel Docker targets
+discovery.relabel "docker_labeled" {
+  targets = discovery.docker.containers.targets
 
+  rule {
+    source_labels = ["__meta_docker_container_label_alloy_scrape"]
+    regex         = "true"
+    action        = "keep"
+  }
 
-prometheus.exporter.unix "default" { }
+  rule {
+    source_labels = ["__meta_docker_container_label_alloy_job"]
+    target_label  = "job"
+    action        = "replace"
+  }
 
-prometheus.scrape "unix" {
-  targets    = prometheus.exporter.unix.default.targets
+  rule {
+    source_labels = ["__address__", "__meta_docker_container_label_alloy_port"]
+    regex         = "([^:]+):\\d+;(\\d+)"
+    replacement   = "$1:$2"
+    target_label  = "__address__"
+    action        = "replace"
+  }
+}
+
+// Scrape Docker containers
+prometheus.scrape "docker_labeled" {
+  targets    = discovery.relabel.docker_labeled.output
   forward_to = [prometheus.remote_write.prom.receiver]
 }
 
-prometheus.exporter.self "default" {}
-
-prometheus.scrape "agent" {
-  targets     = prometheus.exporter.self.default.targets 
-  job_name   = "{{ ALLOY_HOSTNAME }}"
-  forward_to  = [prometheus.remote_write.prom.receiver] 
-}
-
+// Scrape Docker Engine
 prometheus.scrape "engine" {
   targets    = [{"__address__" = "localhost:9323"}]
   job_name   = "{{ ALLOY_HOSTNAME }}"
   forward_to = [prometheus.remote_write.prom.receiver] 
 }
 
+// System Stats
+prometheus.exporter.unix "default" {}
+
+prometheus.scrape "unix" {
+  targets    = prometheus.exporter.unix.default.targets
+  forward_to = [prometheus.remote_write.prom.receiver]
+}
+
+// Agent States
+prometheus.exporter.self "default" {}
+
+prometheus.scrape "agent" {
+  targets     = prometheus.exporter.self.default.targets
+  job_name    = "{{ ALLOY_HOSTNAME }}"
+  forward_to  = [prometheus.remote_write.prom.receiver]
+}
+
+// Mongo Metrics
+{% if MONGO_SCRAPE|default(false) %}
+prometheus.exporter.mongodb "mongo" {
+  mongodb_uri = "mongodb://{{ MONGO_ROOT_USER }}:{{ MONGO_ROOT_PASS }}@localhost:27017"
+}
+
+discovery.relabel "mongo_targets" {
+  targets = prometheus.exporter.mongodb.mongo.targets
+}
+
+prometheus.scrape "mongo" {
+  targets    = discovery.relabel.mongo_targets.output
+  job_name   = "mongo"
+  forward_to = [prometheus.remote_write.prom.receiver]
+}
+{% endif %}
+
+// MariaDB Metrics
+{% if MARIA_SCRAPE|default(false) %}
+prometheus.exporter.mysql "mariadb" {
+  data_source_name = "root:{{ MYSQL_ROOT_PASSWORD }}@(localhost:3306)/"
+}
+
+discovery.relabel "mariadb_targets" {
+  targets = prometheus.exporter.mysql.mariadb.targets
+}
+
+prometheus.scrape "mariadb" {
+  targets    = discovery.relabel.mariadb_targets.output
+  job_name   = "mariadb"
+  forward_to = [prometheus.remote_write.prom.receiver]
+}
+{% endif %}
+
+// Remote Write
 prometheus.remote_write "prom" {
-	endpoint {
-		url = "{{ ALLOY_MIMIR_URL }}"
-  
+  endpoint {
+    url = "{{ ALLOY_MIMIR_URL }}"
+
     basic_auth {
       username = "{{ ALLOY_MIMIR_USER }}"
       password = "{{ ALLOY_MIMIR_PASS }}"
-
     }
-	}
+  }
 }
 
+// System logs
 loki.source.journal "default" {
-  forward_to    = [loki.process.filter.receiver] 
-  labels        = {"job" = "journalctl", "instance" = "{{ ALLOY_HOSTNAME }}"} 
-  relabel_rules = loki.relabel.journal.rules 
+  forward_to    = [loki.process.filter.receiver]
+  labels        = { job = "journalctl", instance = "{{ ALLOY_HOSTNAME }}" }
+  relabel_rules = loki.relabel.journal.rules
 }
 
+// Docker logs
 loki.source.docker "default" {
   host       = "unix:///var/run/docker.sock"
   targets    = discovery.docker.containers.targets
   forward_to = [loki.process.filter.receiver]
-  labels     = {"job" = "docker", "instance" = "{{ ALLOY_HOSTNAME }}"}
+  labels     = { job = "docker", instance = "{{ ALLOY_HOSTNAME }}" }
   relabel_rules = loki.relabel.docker.rules
 }
 
-loki.relabel "journal" { 
-  forward_to = [] 
+loki.relabel "journal" {
+  forward_to = []
 
-  rule { 
-    action        = "replace" 
+  rule {
+    action        = "replace"
     source_labels = ["__journal__systemd_unit"]
-    target_label  = "unit" 
+    target_label  = "unit"
   }
-    rule { 
-    action        = "replace" 
+  rule {
+    action        = "replace"
     source_labels = ["__journal_syslog_identifier"]
-    target_label  = "syslog_identifier" 
+    target_label  = "syslog_identifier"
   }
 }
 
 loki.relabel "docker" {
   forward_to = []
 
-  rule { 
-    action        = "replace" 
+  rule {
+    action        = "replace"
     source_labels = ["__meta_docker_container_name"]
     target_label  = "container_name"
   }
 }
 
-loki.process "filter" { 
-  forward_to    = [loki.process.metrics.receiver] 
+loki.process "filter" {
+  forward_to = [loki.process.metrics.receiver]
 
-  stage.metrics { 
-    metric.counter { 
+  stage.metrics {
+    metric.counter {
       name              = "log_lines_read"
-      match_all         = true 
+      match_all         = true
       action            = "inc"
       max_idle_duration = "24h"
     }
   }
-  stage.drop { 
-    older_than = "24h" 
-    drop_counter_reason = "Too old" 
+  stage.drop {
+    older_than          = "24h"
+    drop_counter_reason = "Too old"
   }
   stage.drop {
-    longer_than = "5KB"
-    drop_counter_reason = "Too big" 
+    longer_than         = "5KB"
+    drop_counter_reason = "Too big"
   }
-  stage.drop { 
-    expression = ".*GrafanaAgent|Uptime-Kuma.*" 
+  stage.drop {
+    expression          = ".*GrafanaAgent|Uptime-Kuma.*"
     drop_counter_reason = "Monitoring Host"
   }
-  stage.drop { 
-    expression = ".*could not set up a wait request to the Docker client|could not acquire work|context canceled.*"
-    drop_counter_reason = "Spammy Log" 
+  stage.drop {
+    expression          = ".*could not set up a wait request to the Docker client|could not acquire work|context canceled.*"
+    drop_counter_reason = "Spammy Log"
   }
-  stage.drop { 
-    expression  = ".*debug.*"
-    drop_counter_reason = "Debug" 
+  stage.drop {
+    expression          = ".*debug.*"
+    drop_counter_reason = "Debug"
   }
-  stage.metrics{
+  stage.metrics {
     metric.counter {
-      name        = "log_lines_processed"
+      name              = "log_lines_processed"
       match_all         = true
       action            = "inc"
       max_idle_duration = "24h"

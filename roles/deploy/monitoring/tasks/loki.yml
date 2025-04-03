@@ -58,6 +58,9 @@
           traefik.http.middlewares.loki-auth.basicauth.users: "{{ LOKI_USER }}:{{ LOKI_PASS }}"
           traefik.http.middlewares.loki-auth.basicauth.removeheader: "true"
           traefik.http.routers.Loki.middlewares: "loki-auth@docker"
+          alloy.scrape: "true"
+          alloy.job: "loki"
+          alloy.port: "3100"
       register: loki_container_result
 
     - name: Restart Loki if config changed but container did not

@@ -37,6 +37,10 @@
         - /var/run/docker.sock:/var/run/docker.sock:ro
         - "{{ TRAEFIK_CONFIG_DIR }}/letsencrypt:/letsencrypt"
         - "{{ TRAEFIK_CONFIG_DIR }}/dynamic_conf.yaml:/config/dynamic_conf.yaml"
+      labels: 
+        alloy.scrape: "true"
+        alloy.job: "traefik"
+        alloy.port: "8082"
       command:
         # Basic
         - "--log.level=DEBUG"

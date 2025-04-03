@@ -16,3 +16,7 @@
           WATCHTOWER_NOTIFICATION_URL: "{{ WATCHTOWER_URL }}"
           WATCHTOWER_CLEANUP: "true"
           WATCHTOWER_POLL_INTERVAL: "43200"
+        labels: 
+          alloy.scrape: "true"
+          alloy.job: "watchtower"
+          alloy.port: "8080"
