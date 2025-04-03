@@ -3,12 +3,10 @@ logging {
   format  = "logfmt"
 }
 
-{% if ALLOY_DOCKER %}
 discovery.docker "containers" {
   host = "unix:///var/run/docker.sock"
   port = 12345
 }
-{% endif %}
 
 
 
@@ -27,13 +25,11 @@ prometheus.scrape "agent" {
   forward_to  = [prometheus.remote_write.prom.receiver] 
 }
 
-{% if ALLOY_DOCKER %}
 prometheus.scrape "engine" {
   targets    = [{"__address__" = "localhost:9323"}]
   job_name   = "{{ ALLOY_HOSTNAME }}"
   forward_to = [prometheus.remote_write.prom.receiver] 
 }
-{% endif %}
 
 prometheus.remote_write "prom" {
 	endpoint {
@@ -53,7 +49,6 @@ loki.source.journal "default" {
   relabel_rules = loki.relabel.journal.rules 
 }
 
-{% if ALLOY_DOCKER %}
 loki.source.docker "default" {
   host       = "unix:///var/run/docker.sock"
   targets    = discovery.docker.containers.targets
@@ -61,7 +56,6 @@ loki.source.docker "default" {
   labels     = {"job" = "docker", "instance" = "{{ ALLOY_HOSTNAME }}"}
   relabel_rules = loki.relabel.docker.rules
 }
-{% endif %}
 
 loki.relabel "journal" { 
   forward_to = [] 
@@ -78,7 +72,6 @@ loki.relabel "journal" {
   }
 }
 
-{% if ALLOY_DOCKER %}
 loki.relabel "docker" {
   forward_to = []
 
@@ -88,7 +81,6 @@ loki.relabel "docker" {
     target_label  = "container_name"
   }
 }
-{% endif %}
 
 loki.process "filter" { 
   forward_to    = [loki.process.metrics.receiver] 
