@@ -1,7 +1,7 @@
 - name: MongoDB
   tags: ["mongodb"]
   vars:
-    MINIO_DATA_DIR: "{{ DATA_DIR }}/mongodb"
+    MONGO_DATA_DIR: "{{ DATA_DIR }}/mongodb"
   block:
     - name: Create MongoDB network
       docker_network:
@@ -9,7 +9,7 @@
 
     - name: Create MongoDB data directory
       file:
-        path: "{{ DATA_DIR }}"
+        path: "{{ MONGO_DATA_DIR }}"
         state: directory
         owner: 999
         group: 999
@@ -25,6 +25,6 @@
           MONGO_INITDB_ROOT_USERNAME: "{{ MONGO_ROOT_USER }}"
           MONGO_INITDB_ROOT_PASSWORD: "{{ MONGO_ROOT_PASS }}"
         volumes:
-          - "{{ DATA_DIR }}:/data/db"
+          - "{{ MONGO_DATA_DIR }}:/data/db"
         networks:
           - name: mongodb
