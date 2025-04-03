@@ -31,7 +31,14 @@
         - name: truthradar
           image: ghcr.io/meyersa/truthradar:latest
           url: "truthradar.{{ FRONTEND_DOMAIN }}"
-          port: 3000
+          port: 5000
+          dbs:
+            - mongodb
+          envs: 
+            - "OPENAI_API_KEY: {{ TR_OA_KEY }}"
+            - "API_KEY: {{ TR_KEY }}"
+            - "MONGO_DB: {{ TR_MONGO_DB }}"
+            - "MONGO_URL: {{ TR_MONGO_DB }}"
 
   - name: Deploy CampusGrows
     include_tasks: _deploy_app.yml
@@ -40,7 +47,7 @@
       containers: 
         - name: campusgrows
           image: ghcr.io/meyersa/campusgrows:latest
-          url: "truthradar.{{ FRONTEND_DOMAIN }}"
+          url: "campusgrows.{{ FRONTEND_DOMAIN }}"
           port: 80
         
   # - name: Deploy MaxMind

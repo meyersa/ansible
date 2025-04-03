@@ -3,39 +3,49 @@
 name: {{ app }}
 
 services:
-  {% for container in containers %}
+{% for container in containers %}
   {{ container.name }}:
       image: {{ container.image }}
       restart: unless-stopped
       mem_limit: 256m
       cpus: 0.5
-      {% if container.url -%}
+{% if container.url %}
       networks:
         - traefik
+{% if container.dbs is defined %}
+{% for db in container.dbs %}
+        - {{ db }}
+{% endfor %}
+{% endif %}
       labels:
         - "traefik.enable=true"
         - "traefik.http.routers.{{ container.name }}.rule=Host(`{{ 'api.' if container.api is defined and container.api else '' }}{{ container.url }}`)"
         - "traefik.http.routers.{{ container.name }}.entrypoints={{ 'apisecure' if container.api is defined and container.api else 'websecure' }}"
         - "traefik.http.services.{{ container.name }}.loadbalancer.server.port={{ container.port | default(80) }}"
-        {%- if container.noindex is defined and container.noindex %}
+{% if (container.noindex is defined and container.noindex) or ENVIRONMENT == "dev" %}
         - "traefik.http.routers.{{ container.name }}.middlewares=noindex-header@file"
-        {%- endif %}
-      {%- endif %}
-      {% if container.volumes is defined %}
+{% endif %}
+{% endif -%}
+{% if container.volumes is defined %}
       volumes:
-        {% for volume in container.volumes %}
+{% for volume in container.volumes %}
         - {{ volume }}
-        {% endfor %}
-      {% endif %}
-      {% if container.envs is defined %}
+{% endfor %}
+{% endif %}
+{% if container.envs is defined %}
       environment:
-        {% for env in container.envs %}
-        - {{ env }}
-        {% endfor %}
-      {% endif %}
-  {% endfor %}
+{% for env in container.envs %}
+        {{ env }}
+{% endfor %}
+{% endif %}
+{% endfor %}
 
 networks:
   default:
   traefik:
     external: true
+  mongodb: 
+    external: true
+  mariadb: 
+    external: true 
+  
