@@ -19,49 +19,25 @@ sudo apt install ansible
 # Features 
 Broken up by the three main sections: configuration, deployment, and maintenance 
 
-## Configuration 
-- Configure default system tasks 
-    - Warp: For remote access
-    - APT: Basic system packages
-    - Crowdsec: Firewall 
-    - DDClient: Dynamic DNS hostname management
-    - Grafana Allow: Monitoring
-    - OS (Swap, Timezone, Hostname): Basic settings
-    - UFW: Basic firewall
-- Docker setup
-- Kubernetes setup
+## Configuration
+
+Takes care of OS and confirms system readiness
 
 ## Deployment 
-- Create and manage production applications
-    - TODO: CampusGrows 
-    - meyersa
-    - TODO: IP
-    - TODO: ShodanETL
-    - TODO: AWSFlask
-    - MindMax
 
-- Create and manage monitoring applications
-    - TODO: Grafana
-        - TODO: Automatically create dashboard for host
-    - TODO: Mimir
-    - TODO: Loki
-    - TODO: UptimeKuma
-        - TODO: Automatically add hosts when website is added/removed
-    
-- Create and manage operational applications 
-    - Traefik
-    - TODO: Crowdsec
-    
-- Create and manage storage applications 
-    - TODO: MongoDB
-    - TODO: MariaDB
-    - TODO: Ceph/s3
+Installs all supporting and value applications
 
-## Maintenance 
-- Updating and upgrading OS and packages 
-- Clean up system files and packages 
-- Clean up Docker 
-- TODO: Upgrade Kubernetes 
-- TODO: Backup database 
-- TODO: Clean up Kubernetes (& containers)
-- TODO: Rolling reboot
+## Maintenance
+
+Tasks like cleaning, updating, and reporting that are run more often than other rules
+
+# ENVs
+
+## Storage
+
+| Tag           | Directory     | Description                                               |
+|---------------|---------------|-----------------------------------------------------------|
+| `DB_DIR`      | `/var/lib`    | Databases and other non backed up items                   |
+| `DATA_DIR`    | `/srv`        | Service and served data that is backed up                 |
+| `STATIC_DIR`  | `/etc`        | Configuration and provisioning files                      |
+| `COMPOSE_DIR` | `/compose`    | Docker compose files       

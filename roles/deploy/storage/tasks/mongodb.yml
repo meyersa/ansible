@@ -1,7 +1,7 @@
 - name: MongoDB
   tags: ["mongodb"]
   vars:
-    MONGO_DATA_DIR: "{{ DATA_DIR }}/mongodb"
+    MONGO_DATA_DIR: "{{ DB_DIR }}/mongodb"
   block:
     - name: Create MongoDB network
       docker_network:

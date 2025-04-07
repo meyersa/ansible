@@ -2,7 +2,7 @@
 - name: MariaDB
   tags: ["mariadb"]
   vars: 
-    MARIADB_DATA_DIR: "{{DATA_DIR}}/mariadb"
+    MARIADB_DATA_DIR: "{{ DB_DIR }}/mariadb"
   block: 
     - name: Create MariaDB network
       docker_network:

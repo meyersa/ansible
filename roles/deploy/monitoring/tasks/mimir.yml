@@ -2,8 +2,8 @@
   tags: ["mimir"]
   vars:
     MIMIR_DATA_DIR: "{{ DATA_DIR }}/mimir"
-    MIMIR_CONFIG_DIR: "{{ CONFIG_DIR }}/mimir"
-    MIMIR_CREDS_FILE: "{{ MIMIR_CONFIG_DIR }}/creds.env"
+    MIMIR_STATIC_DIR: "{{ STATIC_DIR }}/mimir"
+    MIMIR_CREDS_FILE: "{{ MIMIR_STATIC_DIR }}/creds.env"
   block:
     - name: Create Mimir network
       docker_network:
@@ -19,7 +19,7 @@
 
     - name: Create Mimir config directory
       file:
-        path: "{{ MIMIR_CONFIG_DIR }}"
+        path: "{{ MIMIR_STATIC_DIR }}"
         state: directory
         owner: 10001
         group: 10001
@@ -28,7 +28,7 @@
     - name: Deploy Mimir config
       template:
         src: mimir-config.yaml.j2
-        dest: "{{ MIMIR_CONFIG_DIR }}/local-config.yaml"
+        dest: "{{ MIMIR_STATIC_DIR }}/local-config.yaml"
         owner: 10001
         group: 10001
         mode: "0644"
@@ -49,7 +49,7 @@
         command: -config.file=/etc/mimir/local-config.yaml
         volumes:
           - "{{ MIMIR_DATA_DIR }}:/mimir"
-          - "{{ MIMIR_CONFIG_DIR }}/local-config.yaml:/etc/mimir/local-config.yaml"
+          - "{{ MIMIR_STATIC_DIR }}/local-config.yaml:/etc/mimir/local-config.yaml"
         labels:
           traefik.enable: "true"
           traefik.http.routers.mimir.rule: "Host(`mimir.{{ BACKEND_DOMAIN }}`)"

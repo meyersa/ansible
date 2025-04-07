@@ -3,7 +3,7 @@
   tags: ["grafana"]
   vars:
     GRAFANA_DATA_DIR: "{{ DATA_DIR }}/grafana"
-    GRAFANA_CONFIG_DIR: "{{ CONFIG_DIR }}/grafana"
+    GRAFANA_STATIC_DIR: "{{ STATIC_DIR }}/grafana"
     GRAFANA_URL: "dash.{{ BACKEND_DOMAIN }}"
   block:
     - name: Create Grafana data directory
@@ -16,7 +16,7 @@
 
     - name: Create Grafana config directory
       file:
-        path: "{{ GRAFANA_CONFIG_DIR }}"
+        path: "{{ GRAFANA_STATIC_DIR }}"
         state: directory
         owner: 472
         group: 472
@@ -25,7 +25,7 @@
     - name: Copy Grafana provisioning files
       copy:
         src: "{{ playbook_dir }}/grafana_provisioning/"
-        dest: "{{ GRAFANA_CONFIG_DIR }}/provisioning/"
+        dest: "{{ GRAFANA_STATIC_DIR }}/provisioning/"
         owner: 472
         group: 472
         mode: 0644
@@ -44,7 +44,7 @@
           - name: mimir
         volumes:
           - "{{ GRAFANA_DATA_DIR }}:/var/lib/grafana"
-          - "{{ GRAFANA_CONFIG_DIR }}/provisioning:/etc/grafana/provisioning"
+          - "{{ GRAFANA_STATIC_DIR }}/provisioning:/etc/grafana/provisioning"
         env: 
           GF_SERVER_DOMAIN: "{{ GRAFANA_URL }}" 
           GF_SERVER_ROOT_URL: "https://{{ GRAFANA_URL }}/"

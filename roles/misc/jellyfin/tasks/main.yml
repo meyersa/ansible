@@ -5,7 +5,7 @@
     tvshows_dir: /media/tvshows
     movies_dir: /media/movies
     project_src: /etc/jellyfin
-    config_dir: /srv/jellyfin
+    DATA_DIR: /srv/jellyfin
     temp_dir: /media/tmp
   block:
     - name: Run the ls command in /dev/dri
@@ -27,7 +27,7 @@
 
     - name: Ensure config directory exists
       ansible.builtin.file: 
-        path: "{{ config_dir }}"
+        path: "{{ DATA_DIR }}"
         state: directory
         recurse: yes
         mode: '0775'
@@ -95,7 +95,7 @@
     - name: Copy OVPN file
       ansible.builtin.template:
         src: windscribe.ovpn.j2
-        dest: "{{ config_dir }}/windscribe.ovpn"
+        dest: "{{ DATA_DIR }}/windscribe.ovpn"
         mode: '0755'
 
     - name: Compose down

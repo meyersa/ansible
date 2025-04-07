@@ -6,7 +6,7 @@ services:
     image: jellyfin/jellyfin:latest
     container_name: jellyfin
     volumes:
-      - {{ config_dir }}/jellyfin/config:/config
+      - {{ DATA_DIR }}/jellyfin/config:/config
       - {{ tvshows_dir }}:/media/tvshows
       - {{ movies_dir }}:/media/movies
     restart: always
@@ -29,7 +29,7 @@ services:
       - PGID=1000
       - TZ=Etc/UTC
     volumes:
-      - {{ config_dir }}/radarr/data:/config
+      - {{ DATA_DIR }}/radarr/data:/config
       - {{ movies_dir }}:/movies
       - {{ temp_dir }}/downloads:/downloads
     restart: always
@@ -47,7 +47,7 @@ services:
       - PGID=1000
       - TZ=Etc/UTC
     volumes:
-      - {{ config_dir }}/sonarr/data:/config
+      - {{ DATA_DIR }}/sonarr/data:/config
       - {{ tvshows_dir }}:/tv
       - {{ temp_dir }}/downloads:/downloads
     restart: always
@@ -65,7 +65,7 @@ services:
       - PGID=1000
       - TZ=Etc/UTC
     volumes:
-      - {{ config_dir }}/prowlarr/data:/config
+      - {{ DATA_DIR }}/prowlarr/data:/config
     restart: always
     depends_on:
       - vpn
@@ -84,7 +84,7 @@ services:
       - /dev/net/tun:/dev/net/tun 
     restart: always
     volumes: 
-      - {{ config_dir }}/windscribe.ovpn:/gluetun/custom.conf:ro
+      - {{ DATA_DIR }}/windscribe.ovpn:/gluetun/custom.conf:ro
     environment:
       - VPN_SERVICE_PROVIDER=custom
       - VPN_TYPE=openvpn
@@ -111,7 +111,7 @@ services:
       - TZ=Etc/UTC
       - DELUGE_LOGLEVEL=error
     volumes:
-      - {{ config_dir }}/qbittorrent/config:/config
+      - {{ DATA_DIR }}/qbittorrent/config:/config
       - {{ temp_dir }}/downloads:/downloads
     network_mode: 'service:vpn'
     restart: always 
@@ -131,7 +131,7 @@ services:
       - PGID=1000
       - TZ=Etc/UTC
     volumes:
-      - {{ config_dir }}/bazarr/config:/config
+      - {{ DATA_DIR }}/bazarr/config:/config
       - {{ movies_dir }}:/movies
       - {{ tvshows_dir }}:/tv
     restart: always
@@ -164,9 +164,9 @@ services:
       - ffmpegVersion=6
       - nodeName=Internal
     volumes:
-      - {{ config_dir }}/tdarr/server:/app/server
-      - {{ config_dir }}/tdarr/configs:/app/configs
-      - {{ config_dir }}/tdarr/logs:/app/logs
+      - {{ DATA_DIR }}/tdarr/server:/app/server
+      - {{ DATA_DIR }}/tdarr/configs:/app/configs
+      - {{ DATA_DIR }}/tdarr/logs:/app/logs
       - {{ tvshows_dir }}:/media/tvshows
       - {{ movies_dir }}:/media/movies
       - {{ temp_dir }}/tdarr:/temp

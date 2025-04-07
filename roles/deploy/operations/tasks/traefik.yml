@@ -2,7 +2,7 @@
 - name: Traefik
   tags: ["traefik"]
   vars: 
-    TRAEFIK_CONFIG_DIR: "{{ CONFIG_DIR }}/traefik"
+    TRAEFIK_STATIC_DIR: "{{ STATIC_DIR }}/traefik"
   block:
   - name: Ensure traefik docker network exists
     community.docker.docker_network:
@@ -10,14 +10,14 @@
 
   - name: Ensure traefik config directory exists
     ansible.builtin.file:
-      path: "{{ TRAEFIK_CONFIG_DIR }}"
+      path: "{{ TRAEFIK_STATIC_DIR }}"
       state: directory
       mode: '0755'
 
   - name: Deploy traefik dynamic config
     ansible.builtin.template:
       src: dynamic_conf.yaml.j2
-      dest: "{{ TRAEFIK_CONFIG_DIR }}/dynamic_conf.yaml"
+      dest: "{{ TRAEFIK_STATIC_DIR }}/dynamic_conf.yaml"
       mode: '0644'
 
   - name: Deploy Traefik container
@@ -35,8 +35,8 @@
         - "127.0.0.1:8082:8082"
       volumes:
         - /var/run/docker.sock:/var/run/docker.sock:ro
-        - "{{ TRAEFIK_CONFIG_DIR }}/letsencrypt:/letsencrypt"
-        - "{{ TRAEFIK_CONFIG_DIR }}/dynamic_conf.yaml:/config/dynamic_conf.yaml"
+        - "{{ TRAEFIK_STATIC_DIR }}/letsencrypt:/letsencrypt"
+        - "{{ TRAEFIK_STATIC_DIR }}/dynamic_conf.yaml:/config/dynamic_conf.yaml"
       labels: 
         alloy.scrape: "true"
         alloy.job: "traefik"

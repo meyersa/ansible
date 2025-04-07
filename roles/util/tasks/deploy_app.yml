@@ -2,7 +2,7 @@
 - name: Deploy {{ app }}
   tags: ["{{ app }}"]
   vars: 
-    APP_PATH: "/etc/{{ app }}"
+    APP_PATH: "{{ COMPOSE_DIR }}/{{ app }}"
   block:
     - name: Create {{ app }} data directory
       file:

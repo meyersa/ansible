@@ -3,8 +3,8 @@
   tags: ["loki"]
   vars:
     LOKI_DATA_DIR: "{{ DATA_DIR }}/loki"
-    LOKI_CONFIG_DIR: "{{ CONFIG_DIR }}/loki"
-    LOKI_CREDS_FILE: "{{ LOKI_CONFIG_DIR }}/creds.env"
+    LOKI_STATIC_DIR: "{{ STATIC_DIR }}/loki"
+    LOKI_CREDS_FILE: "{{ LOKI_STATIC_DIR }}/creds.env"
   block:
     - name: Create Loki network
       docker_network:
@@ -20,7 +20,7 @@
 
     - name: Create Loki config directory
       file:
-        path: "{{ LOKI_CONFIG_DIR }}"
+        path: "{{ LOKI_STATIC_DIR }}"
         state: directory
         owner: 10001
         group: 10001
@@ -29,7 +29,7 @@
     - name: Deploy Loki config
       template:
         src: loki-config.yaml.j2
-        dest: "{{ LOKI_CONFIG_DIR }}/local-config.yaml"
+        dest: "{{ LOKI_STATIC_DIR }}/local-config.yaml"
         owner: 10001
         group: 10001
         mode: "0644"
@@ -49,7 +49,7 @@
         command: -config.file=/etc/loki/local-config.yaml
         volumes:
           - "{{ LOKI_DATA_DIR }}:/loki"
-          - "{{ LOKI_CONFIG_DIR }}/local-config.yaml:/etc/loki/local-config.yaml"
+          - "{{ LOKI_STATIC_DIR }}/local-config.yaml:/etc/loki/local-config.yaml"
         labels:
           traefik.enable: "true"
           traefik.http.routers.loki.rule: "Host(`loki.{{ BACKEND_DOMAIN }}`)"
