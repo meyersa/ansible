@@ -2,8 +2,10 @@
 - name: Docker Monitoring
   tags: ["monitoring"]
   block: 
-    - import_tasks: grafana.yml
-
     - import_tasks: loki.yml
 
     - import_tasks: mimir.yml
+
+    - import_tasks: grafana.yml
+
+    - import_tasks: crowdsec.yml

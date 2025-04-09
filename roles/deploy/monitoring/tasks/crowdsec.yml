@@ -1,0 +1,91 @@
+---
+- name: Crowdsec
+  tags: ["crowdsec"]
+  vars:
+    CROWDSEC_DATA_DIR: "{{ DATA_DIR }}/crowdsec"
+    CROWDSEC_STATIC_DIR: "{{ STATIC_DIR }}/crowdsec"
+  block:
+    - name: Create Crowdsec data directory
+      file:
+        path: "{{ CROWDSEC_DATA_DIR }}"
+        state: directory
+        owner: 10001
+        group: 10001
+        mode: "0755"
+
+    - name: Create Crowdsec config directory
+      file:
+        path: "{{ CROWDSEC_STATIC_DIR }}"
+        state: directory
+        owner: 10001
+        group: 10001
+        mode: "0755"
+
+    - name: Copy Crowdsec acquis
+      copy:
+        src: crowdsec-acquis.yaml.j2
+        dest: "{{ CROWDSEC_STATIC_DIR }}/acquis.yaml"
+        owner: 10001
+        group: 10001
+        mode: "0644"
+      register: crowdsec_acquis_result
+
+    - name: Copy Crowdsec profiles
+      copy:
+        src: crowdsec-profiles.yaml.j2
+        dest: "{{ CROWDSEC_STATIC_DIR }}/profiles.yaml"
+        owner: 10001
+        group: 10001
+        mode: "0644"
+      register: crowdsec_profiles_result
+
+    - name: Copy Crowdsec slack
+      copy:
+        src: crowdsec-slack.yaml.j2
+        dest: "{{ CROWDSEC_STATIC_DIR }}/slack.yaml"
+        owner: 10001
+        group: 10001
+        mode: "0644"
+      register: crowdsec_slack_result
+
+    - name: Add Crowdsec container
+      docker_container:
+        name: crowdsec
+        image: crowdsecurity/crowdsec:latest-debian
+        state: started
+        restart_policy: unless-stopped
+        networks:
+          - name: loki
+          - name: traefik
+        env: 
+          COLLECTIONS: "crowdsecurity/traefik crowdsecurity/linux-lpe crowdsecurity/linux crowdsecurity/iptables crowdsecurity/sshd crowdsecurity/appsec-crs crowdsecurity/appsec-virtual-patching"
+          ENROLL_KEY: "{{ CROWDSEC_TOKEN }}"
+          ENROLL_INSTANCE_NAME: "{{ inventory_hostname }}"
+          CROWDSEC_WEBHOOK: "{{ CROWDSEC_WEBHOOK }}"
+          BOUNCER_KEY_IPTABLES: "{{ CROWDSEC_BOUNCER_KEY }}"
+        volumes:
+          - "{{ CROWDSEC_STATIC_DIR }}/acquis.yaml:/etc/crowdsec/acquis.yaml"
+          - "{{ CROWDSEC_STATIC_DIR }}/profiles.yaml:/etc/crowdsec/profiles.yaml"
+          - "{{ CROWDSEC_STATIC_DIR }}/slack.yaml:/etc/crowdsec/notifications/slack.yaml"
+          - "{{ CROWDSEC_DATA_DIR }}/config:/etc/crowdsec"
+          - "{{ CROWDSEC_DATA_DIR }}/data:/var/lib/crowdsec/data/"
+        published_ports: 
+          - "127.0.0.1:6060:6060"
+        exposed_ports:
+          - 8080
+          - 7422
+        labels:
+          traefik.enable: "true"
+          traefik.http.routers.crowdsec.rule: "Host(`crowdsec.{{ BACKEND_DOMAIN }}`)"
+          traefik.http.routers.crowdsec.entrypoints: "apisecure"
+          traefik.http.services.crowdsec.loadbalancer.server.port: "8080"
+          alloy.scrape: "true"
+          alloy.job: "crowdsec"
+          alloy.port: "6060"
+      register: crowdsec_container_result
+
+    - name: Restart Crowdsec if config changed but container did not
+      docker_container:
+        name: loki
+        restart: true
+      when: (crowdsec_acquis_result.changed or crowdsec_profiles_result.changed or crowdsec_slack_result.changed) and not crowdsec_container_result.changed
