@@ -43,9 +43,8 @@
         networks:
           - name: mimir
           - name: traefik
-        exposed_ports: 
-          - 9009
-          - 9095
+        published_ports:
+          - "127.0.0.1:9009:9009"
         command: -config.file=/etc/mimir/local-config.yaml
         volumes:
           - "{{ MIMIR_DATA_DIR }}:/mimir"
@@ -60,7 +59,7 @@
           traefik.http.routers.Mimir.middlewares: "mimir-auth@docker"
           alloy.scrape: "true"
           alloy.job: "mimir"
-          alloy.port: "8080"
+          alloy.port: "9009"
       register: mimir_container_result
 
     - name: Restart Mimir if config changed but container did not

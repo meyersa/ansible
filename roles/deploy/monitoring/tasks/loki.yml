@@ -44,8 +44,8 @@
         networks:
           - name: loki
           - name: traefik
-        ports:
-          - "3100:3100"
+        published_ports:
+          - "127.0.0.1:3100:3100"
         command: -config.file=/etc/loki/local-config.yaml
         volumes:
           - "{{ LOKI_DATA_DIR }}:/loki"

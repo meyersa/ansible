@@ -9,6 +9,8 @@
         state: started
         restart_policy: unless-stopped
         hostname: "{{ ansible_hostname }}"
+        published_ports: 
+          - "127.0.0.1:5011:8080"
         volumes:
           - /var/run/docker.sock:/var/run/docker.sock
         env:
@@ -16,7 +18,4 @@
           WATCHTOWER_NOTIFICATION_URL: "{{ WATCHTOWER_URL }}"
           WATCHTOWER_CLEANUP: "true"
           WATCHTOWER_POLL_INTERVAL: "43200"
-        labels: 
-          alloy.scrape: "true"
-          alloy.job: "watchtower"
-          alloy.port: "8080"
+        # TODO: Add a bearer section to the labels so this works
