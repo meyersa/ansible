@@ -50,13 +50,16 @@
           url: "campusgrows.{{ FRONTEND_DOMAIN }}"
           port: 80
         
-  # - name: Deploy MaxMind
-  #   include_tasks: roles/util/tasks/deploy_app.yml
-  #   vars: 
-  #     app: "maxmind"
-  #     containers: 
-  #       - name: maxmind
-  #         image: 
+  - name: Deploy MaxMind
+    include_tasks: roles/util/tasks/deploy_app.yml
+    vars: 
+      app: "maxmind"
+      containers: 
+        - name: maxmind
+          image: observabilitystack/geoip-api:latest
+          url: "maxmind.{{ BACKEND_DOMAIN }}"
+          port: 8080
+          api: true
 
   # Needs Storage
   # ShodanETL
