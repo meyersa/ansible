@@ -5,16 +5,19 @@
   - name: Deploy whoami
     include_tasks: roles/util/tasks/deploy_app.yml
     when: ENVIRONMENT == "dev"
+    tags: ["whoami"]
     vars: 
       app: "whoami"
       containers: 
         - name: whoami
           image: traefik/whoami
+          noindex: true
           url: whoami.{{ FRONTEND_DOMAIN}}
           port: 80
 
   - name: Deploy meyersa
     include_tasks: roles/util/tasks/deploy_app.yml
+    tags: ["meyersa"]
     vars:
       app: "meyersa"
       containers:
@@ -25,6 +28,7 @@
 
   - name: Deploy TruthRadar
     include_tasks: roles/util/tasks/deploy_app.yml
+    tags: ["truthradar"]
     vars:
       app: "truthradar"
       containers:
@@ -32,6 +36,7 @@
           image: ghcr.io/meyersa/truthradar:latest
           url: "truthradar.{{ FRONTEND_DOMAIN }}"
           port: 5000
+          noindex: true
           dbs:
             - mongodb
           envs: 
@@ -42,6 +47,7 @@
 
   - name: Deploy CampusGrows
     include_tasks: roles/util/tasks/deploy_app.yml
+    tags: ["campusgrows"]
     vars: 
       app: "campusgrows"
       containers: 
@@ -52,6 +58,7 @@
         
   - name: Deploy MaxMind
     include_tasks: roles/util/tasks/deploy_app.yml
+    tags: ["maxmind"]
     vars: 
       app: "maxmind"
       containers: 
@@ -61,8 +68,86 @@
           port: 8080
           api: true
 
+  - name: ShodanETL
+    include_tasks: roles/util/tasks/deploy_app.yml
+    tags: ["shodanetl"]
+    vars: 
+      app: "shodanetl"
+      mongo_user: "{{ SE_MONGO_USER }}"
+      mongo_pass: "{{ SE_MONGO_PASS }}"
+      mongo_db: "{{ SE_MONGO_DB }}"
+      containers: 
+        - name: frontend
+          image: ghcr.io/meyersa/shodan_display:latest
+          url: "shodanetl.{{ FRONTEND_DOMAIN }}"
+          noindex: true
+          port: 3000
+          dbs: 
+            - mongodb
+          envs: 
+            - "MONGO_DB: {{ SE_MONGO_DB }}"
+            - "MONGO_URL: {{ SE_MONGO_URL }}"
+        - name: backend
+          image: ghcr.io/meyersa/shodan_producer:latest
+          dbs: 
+            - mongodb
+          envs: 
+            - "MONGO_DB: {{ SE_MONGO_DB }}"
+            - "MONGO_URL: {{ SE_MONGO_URL }}"
+            - "SHODAN_API_KEY: {{SE_SHODAN_API_KEY}}"
+            - "SHODAN_QUERY: {{SE_SHODAN_QUERY}}"
+            - "CROWDSEC_LAPI_URL: {{SE_CROWDSEC_LAPI_URL}}"
+            - "CROWDSEC_LAPI_KEY: {{SE_CROWDSEC_LAPI_KEY}}"
+            - "MAXMIND_API_URL: {{SE_MAXMIND_API_URL}}"
+            
+  - name: CloudSCT
+    include_tasks: roles/util/tasks/deploy_app.yml
+    tags: ["cloudsct"]
+    vars: 
+      app: "cloudsct"
+      mongo_user: "{{ CS_MONGO_USER }}"
+      mongo_pass: "{{ CS_MONGO_PASS }}"
+      mongo_db: "{{ CS_MONGO_DB }}"
+      containers: 
+        - name: frontend
+          image: ghcr.io/meyersa/cloudsct-frontend:latest
+          url: "cloudsct.{{ FRONTEND_DOMAIN }}"
+          noindex: true
+          port: 3000
+          dbs: 
+            - mongodb
+          envs: 
+            - "MONGO_DB: {{ CS_MONGO_DB }}"
+            - "MONGO_URL: {{ CS_MONGO_URL }}"
+        - name: backend
+          image: ghcr.io/meyersa/cloudsct-backend:latest
+          dbs: 
+            - mongodb
+          envs: 
+            - "MONGO_DB: {{ CS_MONGO_DB }}"
+            - "MONGO_URL: {{ CS_MONGO_URL }}"
+            
+  - name: Travel
+    include_tasks: roles/util/tasks/deploy_app.yml
+    tags: ["travel"]
+    vars: 
+      app: "travel"
+      mongo_user: "{{ TL_MONGO_USER }}"
+      mongo_pass: "{{ TL_MONGO_PASS }}"
+      mongo_db: "{{ TL_MONGO_DB }}"
+      containers: 
+        - name: frontend
+          image: ghcr.io/meyersa/travel:latest
+          url: "travel.{{ FRONTEND_DOMAIN }}"
+          noindex: true
+          port: 3000
+          dbs: 
+            - mongodb
+          envs: 
+            - "MONGO_DB: {{ TL_MONGO_DB }}"
+            - "MONGO_URL: {{ TL_MONGO_URL }}"
+            - "SERVER_KEY: {{ TL_SERVER_KEY }}"
+            - "OPENAI_KEY: {{ TL_OPENAI_KEY }}"
+
   # Needs Storage
-  # ShodanETL
-  # Travel
-  # CloudSCT
   # IP

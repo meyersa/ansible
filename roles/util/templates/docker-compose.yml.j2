@@ -4,26 +4,31 @@ name: {{ app }}
 
 services:
 {% for container in containers %}
-  {{ container.name }}:
+  {{ app }}-{{ container.name }}:
       image: {{ container.image }}
+      container_name: {{ app }}-{{ container.name }}
       restart: unless-stopped
       mem_limit: 256m
       cpus: 0.5
-{% if container.url %}
+{% if container.url is defined or container.dbs is defined %}
       networks:
+{% if container.url is defined %}
         - traefik
+{% endif %}
 {% if container.dbs is defined %}
 {% for db in container.dbs %}
         - {{ db }}
 {% endfor %}
 {% endif %}
+{% endif %}
+{% if container.url is defined %}
       labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.{{ container.name }}.rule=Host(`{{ 'api.' if container.api is defined and container.api else '' }}{{ container.url }}`)"
-        - "traefik.http.routers.{{ container.name }}.entrypoints={{ 'apisecure' if container.api is defined and container.api else 'websecure' }}"
-        - "traefik.http.services.{{ container.name }}.loadbalancer.server.port={{ container.port | default(80) }}"
+        - "traefik.http.routers.{{ app }}-{{ container.name }}.rule=Host(`{{ container.url }}`)"
+        - "traefik.http.routers.{{ app }}-{{ container.name }}.entrypoints={{ 'apisecure' if container.api is defined and container.api else 'websecure' }}"
+        - "traefik.http.services.{{ app }}-{{ container.name }}.loadbalancer.server.port={{ container.port | default(80) }}"
 {% if (container.noindex is defined and container.noindex) or ENVIRONMENT == "dev" %}
-        - "traefik.http.routers.{{ container.name }}.middlewares=noindex-header@file"
+        - "traefik.http.routers.{{ app }}-{{ container.name }}.middlewares=noindex-header@file"
 {% endif %}
 {% endif -%}
 {% if container.volumes is defined %}
@@ -36,6 +41,12 @@ services:
       environment:
 {% for env in container.envs %}
         {{ env }}
+{% endfor %}
+{% endif %}
+{% if container.labels is defined %}
+      labels:
+{% for label in container.labels %}
+        {{ label }}
 {% endfor %}
 {% endif %}
 {% endfor %}

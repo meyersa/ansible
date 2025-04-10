@@ -4,6 +4,17 @@
   vars: 
     APP_PATH: "{{ COMPOSE_DIR }}/{{ app }}"
   block:
+    - name: Create MongoDB user if needed
+      community.mongodb.mongodb_user:
+        login_user: "{{ MONGO_ROOT_USER }}"
+        login_password: "{{ MONGO_ROOT_PASS }}"
+        name: "{{ mongo_user }}"
+        password: "{{ mongo_pass }}"
+        roles: ['readWrite']
+        database: "{{ mongo_db }}"
+        state: present
+      when: mongo_user is defined and mongo_pass is defined
+        
     - name: Create {{ app }} data directory
       file:
         path: "{{ APP_PATH }}"
@@ -20,3 +31,4 @@
     - name: Start {{ app }}
       community.docker.docker_compose_v2:
         project_src: "{{ APP_PATH }}"
+        remove_orphans: true

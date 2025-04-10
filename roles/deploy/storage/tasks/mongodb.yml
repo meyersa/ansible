@@ -3,6 +3,11 @@
   vars:
     MONGO_DATA_DIR: "{{ DB_DIR }}/mongodb"
   block:
+    - name: Add MongoDB package to pip
+      pip: 
+        name: pymongo>4.0
+        break_system_packages: true 
+
     - name: Create MongoDB network
       docker_network:
         name: mongodb
