@@ -26,11 +26,37 @@
           url: "{{ FRONTEND_DOMAIN }}"
           port: 3000
 
+  - name: Deploy CampusGrows
+    include_tasks: roles/util/tasks/deploy_app.yml
+    tags: ["campusgrows"]
+    vars: 
+      app: "campusgrows"
+      containers: 
+        - name: campusgrows
+          image: ghcr.io/meyersa/campusgrows:latest
+          url: "campusgrows.{{ FRONTEND_DOMAIN }}"
+          port: 80
+
+  - name: Deploy MaxMind
+    include_tasks: roles/util/tasks/deploy_app.yml
+    tags: ["maxmind"]
+    vars: 
+      app: "maxmind"
+      containers: 
+        - name: maxmind
+          image: observabilitystack/geoip-api:latest
+          url: "maxmind.{{ BACKEND_DOMAIN }}"
+          port: 8080
+          api: true
+
   - name: Deploy TruthRadar
     include_tasks: roles/util/tasks/deploy_app.yml
     tags: ["truthradar"]
     vars:
       app: "truthradar"
+      mongo_user: "{{ TR_MONGO_USER }}"
+      mongo_pass: "{{ TR_MONGO_PASS }}"
+      mongo_db: "{{ TR_MONGO_DB }}"
       containers:
         - name: truthradar
           image: ghcr.io/meyersa/truthradar:latest
@@ -44,29 +70,6 @@
             - "API_KEY: {{ TR_KEY }}"
             - "MONGO_DB: {{ TR_MONGO_DB }}"
             - "MONGO_URL: {{ TR_MONGO_URL }}"
-
-  - name: Deploy CampusGrows
-    include_tasks: roles/util/tasks/deploy_app.yml
-    tags: ["campusgrows"]
-    vars: 
-      app: "campusgrows"
-      containers: 
-        - name: campusgrows
-          image: ghcr.io/meyersa/campusgrows:latest
-          url: "campusgrows.{{ FRONTEND_DOMAIN }}"
-          port: 80
-        
-  - name: Deploy MaxMind
-    include_tasks: roles/util/tasks/deploy_app.yml
-    tags: ["maxmind"]
-    vars: 
-      app: "maxmind"
-      containers: 
-        - name: maxmind
-          image: observabilitystack/geoip-api:latest
-          url: "maxmind.{{ BACKEND_DOMAIN }}"
-          port: 8080
-          api: true
 
   - name: ShodanETL
     include_tasks: roles/util/tasks/deploy_app.yml
@@ -87,18 +90,18 @@
           envs: 
             - "MONGO_DB: {{ SE_MONGO_DB }}"
             - "MONGO_URL: {{ SE_MONGO_URL }}"
-        - name: backend
-          image: ghcr.io/meyersa/shodan_producer:latest
-          dbs: 
-            - mongodb
-          envs: 
-            - "MONGO_DB: {{ SE_MONGO_DB }}"
-            - "MONGO_URL: {{ SE_MONGO_URL }}"
-            - "SHODAN_API_KEY: {{SE_SHODAN_API_KEY}}"
-            - "SHODAN_QUERY: {{SE_SHODAN_QUERY}}"
-            - "CROWDSEC_LAPI_URL: {{SE_CROWDSEC_LAPI_URL}}"
-            - "CROWDSEC_LAPI_KEY: {{SE_CROWDSEC_LAPI_KEY}}"
-            - "MAXMIND_API_URL: {{SE_MAXMIND_API_URL}}"
+        # - name: backend
+        #   image: ghcr.io/meyersa/shodan_producer:latest
+        #   dbs: 
+        #     - mongodb
+        #   envs: 
+        #     - "MONGO_DB: {{ SE_MONGO_DB }}"
+        #     - "MONGO_URL: {{ SE_MONGO_URL }}"
+        #     - "SHODAN_API_KEY: {{SE_SHODAN_API_KEY}}"
+        #     - "SHODAN_QUERY: {{SE_SHODAN_QUERY}}"
+        #     - "CROWDSEC_LAPI_URL: {{SE_CROWDSEC_LAPI_URL}}"
+        #     - "CROWDSEC_LAPI_KEY: {{SE_CROWDSEC_LAPI_KEY}}"
+        #     - "MAXMIND_API_URL: {{SE_MAXMIND_API_URL}}"
             
   - name: CloudSCT
     include_tasks: roles/util/tasks/deploy_app.yml

@@ -8,14 +8,68 @@ discovery.docker "containers" {
   port = 12345
 }
 
-// Relabel Docker targets
-discovery.relabel "docker_labeled" {
+// Relabel Docker targets for Blackbox
+discovery.relabel "blackbox" {
+  targets = discovery.docker.containers.targets
+
+  rule {
+    source_labels = ["__meta_docker_container_label_alloy_blackbox"]
+    regex         = "^$"
+    action        = "drop"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_label_alloy_blackbox"]
+    regex         = "(.+)"
+    replacement   = "https://$1"
+    target_label  = "address"
+    action        = "replace"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_label_alloy_blackbox"]
+    regex         = "(.+)"
+    replacement   = "https://$1"
+    target_label  = "target_url"
+    action        = "replace"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    target_label  = "name"
+    action        = "replace"
+  }
+
+  rule {
+    replacement  = "http_2xx"
+    target_label = "module"
+    action       = "replace"
+  }
+}
+
+
+// Blackbox
+prometheus.exporter.blackbox "default" {
+  config = "{\"modules\":{\"http_2xx\":{\"prober\":\"http\",\"timeout\":\"5s\",\"http\":{\"valid_http_versions\":[\"HTTP/1.1\",\"HTTP/2\"],\"valid_status_codes\":[200,204,301,302,308],\"follow_redirects\":true,\"preferred_ip_protocol\":\"ip4\"}}}}"
+
+  targets = discovery.relabel.blackbox.output
+}
+
+// Scrape Blackbox
+prometheus.scrape "blackbox" {
+  targets    = prometheus.exporter.blackbox.default.targets
+  forward_to = [prometheus.remote_write.prom.receiver]
+
+}
+
+// Relabel Docker targets for metrics scraping
+discovery.relabel "metrics" {
   targets = discovery.docker.containers.targets
 
   rule {
     source_labels = ["__meta_docker_container_label_alloy_scrape"]
-    regex         = "true"
-    action        = "keep"
+    regex         = "^$"
+    action        = "drop"
   }
 
   rule {
@@ -34,8 +88,8 @@ discovery.relabel "docker_labeled" {
 }
 
 // Scrape Docker containers
-prometheus.scrape "docker_labeled" {
-  targets    = discovery.relabel.docker_labeled.output
+prometheus.scrape "docker_metrics" {
+  targets    = discovery.relabel.metrics.output
   forward_to = [prometheus.remote_write.prom.receiver]
 }
 

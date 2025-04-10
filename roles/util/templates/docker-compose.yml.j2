@@ -10,6 +10,8 @@ services:
       restart: unless-stopped
       mem_limit: 256m
       cpus: 0.5
+
+      # Networks
 {% if container.url is defined or container.dbs is defined %}
       networks:
 {% if container.url is defined %}
@@ -21,8 +23,28 @@ services:
 {% endfor %}
 {% endif %}
 {% endif %}
+
+      # Volumes
+{% if container.volumes is defined %}
+      volumes:
+{% for volume in container.volumes %}
+        - {{ volume }}
+{% endfor %}
+{% endif %}
+
+      # Envs
+{% if container.envs is defined %}
+      environment:
+{% for env in container.envs %}
+        {{ env }}
+{% endfor %}
+{% endif %}
+
+      # Labels
+      labels: 
+        - "ansible.deploy=true"
 {% if container.url is defined %}
-      labels:
+        - "alloy.blackbox={{ container.url }}"
         - "traefik.enable=true"
         - "traefik.http.routers.{{ app }}-{{ container.name }}.rule=Host(`{{ container.url }}`)"
         - "traefik.http.routers.{{ app }}-{{ container.name }}.entrypoints={{ 'apisecure' if container.api is defined and container.api else 'websecure' }}"
@@ -31,20 +53,7 @@ services:
         - "traefik.http.routers.{{ app }}-{{ container.name }}.middlewares=noindex-header@file"
 {% endif %}
 {% endif -%}
-{% if container.volumes is defined %}
-      volumes:
-{% for volume in container.volumes %}
-        - {{ volume }}
-{% endfor %}
-{% endif %}
-{% if container.envs is defined %}
-      environment:
-{% for env in container.envs %}
-        {{ env }}
-{% endfor %}
-{% endif %}
-{% if container.labels is defined %}
-      labels:
+{% if container.labels is defined  %}
 {% for label in container.labels %}
         {{ label }}
 {% endfor %}
