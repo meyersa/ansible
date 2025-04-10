@@ -2,6 +2,4 @@
 - name: Deploy Storage
   tags: ["storage"]
   block:
-    - import_tasks: mariadb.yml
-
     - import_tasks: mongodb.yml

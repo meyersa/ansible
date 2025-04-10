@@ -80,23 +80,6 @@ prometheus.scrape "mongo" {
 }
 {% endif %}
 
-// MariaDB Metrics
-{% if MARIA_SCRAPE|default(false) %}
-prometheus.exporter.mysql "mariadb" {
-  data_source_name = "root:{{ MYSQL_ROOT_PASSWORD }}@(localhost:3306)/"
-}
-
-discovery.relabel "mariadb_targets" {
-  targets = prometheus.exporter.mysql.mariadb.targets
-}
-
-prometheus.scrape "mariadb" {
-  targets    = discovery.relabel.mariadb_targets.output
-  job_name   = "mariadb"
-  forward_to = [prometheus.remote_write.prom.receiver]
-}
-{% endif %}
-
 // Remote Write
 prometheus.remote_write "prom" {
   endpoint {
