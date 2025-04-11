@@ -56,6 +56,12 @@
         groups: docker
         append: true
 
+    - name: Add alloy to Docker group
+      ansible.builtin.user:
+        name: "alloy"
+        groups: docker
+        append: true
+
     - name: Add generic user to Docker group
       ansible.builtin.user:
         name: "{{ DEPLOY_USER }}"
