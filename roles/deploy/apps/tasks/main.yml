@@ -9,7 +9,7 @@
     vars: 
       app: "whoami"
       containers: 
-        - name: whoami
+        - name: frontend
           image: traefik/whoami
           noindex: true
           url: whoami.{{ FRONTEND_DOMAIN}}
@@ -21,7 +21,7 @@
     vars:
       app: "meyersa"
       containers:
-        - name: meyersa
+        - name: frontend
           image: ghcr.io/meyersa/new-web:latest
           url: "{{ FRONTEND_DOMAIN }}"
           port: 3000
@@ -32,7 +32,7 @@
     vars: 
       app: "campusgrows"
       containers: 
-        - name: campusgrows
+        - name: frontend
           image: ghcr.io/meyersa/campusgrows:latest
           url: "campusgrows.{{ FRONTEND_DOMAIN }}"
           port: 80
@@ -43,7 +43,7 @@
     vars: 
       app: "maxmind"
       containers: 
-        - name: maxmind
+        - name: api
           image: observabilitystack/geoip-api:latest
           url: "maxmind.{{ BACKEND_DOMAIN }}"
           port: 8080
@@ -58,7 +58,7 @@
       mongo_pass: "{{ TR_MONGO_PASS }}"
       mongo_db: "{{ TR_MONGO_DB }}"
       containers:
-        - name: truthradar
+        - name: frontend
           image: ghcr.io/meyersa/truthradar:latest
           url: "truthradar.{{ FRONTEND_DOMAIN }}"
           port: 5000
@@ -71,25 +71,25 @@
             - "MONGO_DB: {{ TR_MONGO_DB }}"
             - "MONGO_URL: {{ TR_MONGO_URL }}"
 
-  - name: ShodanETL
-    include_tasks: roles/util/tasks/deploy_app.yml
-    tags: ["shodanetl"]
-    vars: 
-      app: "shodanetl"
-      mongo_user: "{{ SE_MONGO_USER }}"
-      mongo_pass: "{{ SE_MONGO_PASS }}"
-      mongo_db: "{{ SE_MONGO_DB }}"
-      containers: 
-        - name: frontend
-          image: ghcr.io/meyersa/shodan_display:latest
-          url: "shodanetl.{{ FRONTEND_DOMAIN }}"
-          noindex: true
-          port: 3000
-          dbs: 
-            - mongodb
-          envs: 
-            - "MONGO_DB: {{ SE_MONGO_DB }}"
-            - "MONGO_URL: {{ SE_MONGO_URL }}"
+  # - name: ShodanETL
+  #   include_tasks: roles/util/tasks/deploy_app.yml
+  #   tags: ["shodanetl"]
+  #   vars: 
+  #     app: "shodanetl"
+  #     mongo_user: "{{ SE_MONGO_USER }}"
+  #     mongo_pass: "{{ SE_MONGO_PASS }}"
+  #     mongo_db: "{{ SE_MONGO_DB }}"
+  #     containers: 
+  #       - name: frontend
+  #         image: ghcr.io/meyersa/shodan_display:latest
+  #         url: "shodanetl.{{ FRONTEND_DOMAIN }}"
+  #         noindex: true
+  #         port: 3000
+  #         dbs: 
+  #           - mongodb
+  #         envs: 
+  #           - "MONGO_DB: {{ SE_MONGO_DB }}"
+  #           - "MONGO_URL: {{ SE_MONGO_URL }}"
         # - name: backend
         #   image: ghcr.io/meyersa/shodan_producer:latest
         #   dbs: 
