@@ -4,6 +4,16 @@ tls:
       sniStrict: true
       
 http:
+  routers:
+    block-metrics:
+      rule: "Path(`/metrics`)"
+      entryPoints:
+        - web
+        - websecure
+        - apisecure
+      priority: 100
+      service: noop@internal
+
   middlewares:
     web-ratelimit:
       rateLimit:
