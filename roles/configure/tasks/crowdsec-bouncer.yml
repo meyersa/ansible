@@ -1,6 +1,6 @@
 ---
 - name: Install Crowdsec Bouncer
-  tags: ["crowdsec"]
+  tags: ["crowdsec-bouncer"]
   block:
     - name: Create a directory if it does not exist
       ansible.builtin.file:
@@ -19,11 +19,15 @@
         keyring: /etc/apt/keyrings/crowdsec_crowdsec-archive-keyring.gpg
         state: present
 
-    - name: Add Crowdsec repository
+    - name: Add Crowdsec binary repo
       ansible.builtin.apt_repository:
-        repo: >-
-          deb [signed-by=/etc/apt/keyrings/crowdsec_crowdsec-archive-keyring.gpg] https://packagecloud.io/crowdsec/crowdsec/any/ any main
-          deb-src [signed-by=/etc/apt/keyrings/crowdsec_crowdsec-archive-keyring.gpg] https://packagecloud.io/crowdsec/crowdsec/any/ any main
+        repo: deb [signed-by=/etc/apt/keyrings/crowdsec_crowdsec-archive-keyring.gpg] https://packagecloud.io/crowdsec/crowdsec/any/ any main
+        filename: crowdsec
+        state: present
+
+    - name: Add Crowdsec source repo
+      ansible.builtin.apt_repository:
+        repo: deb-src [signed-by=/etc/apt/keyrings/crowdsec_crowdsec-archive-keyring.gpg] https://packagecloud.io/crowdsec/crowdsec/any/ any main
         filename: crowdsec
         state: present
 
