@@ -44,7 +44,7 @@ services:
       labels: 
         - "ansible.deploy=true"
 {% if container.url is defined %}
-        - "alloy.blackbox={{ container.url }}"
+        - "alloy.blackbox={{ container.url }}{% if container.api is defined %}:8443{% endif %}"
         - "traefik.enable=true"
         - "traefik.http.routers.{{ app }}-{{ container.name }}.rule=Host(`{{ container.url }}`)"
         - "traefik.http.routers.{{ app }}-{{ container.name }}.entrypoints={{ 'apisecure' if container.api is defined and container.api else 'websecure' }}"

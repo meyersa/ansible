@@ -14,11 +14,16 @@
         state: directory
         mode: "0755"
 
-    # TODO: Add scraping to find metrics. labels on containers to get all metrics
     - name: Copy Alloy config
       ansible.builtin.template:
         src: config.alloy.j2
         dest: "{{ ALLOY_DIR }}/config.alloy"
+        force: yes
+
+    - name: Copy Blackbox config
+      ansible.builtin.copy:
+        src: blackbox.yml
+        dest: "{{ ALLOY_DIR }}/blackbox.yml"
         force: yes
 
     - name: Check if GeoLite2-City directory exists

@@ -36,6 +36,12 @@ discovery.relabel "blackbox" {
 
   rule {
     source_labels = ["__meta_docker_container_name"]
+    target_label  = "target_container"
+    action        = "replace"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_name"]
     target_label  = "name"
     action        = "replace"
   }
@@ -50,7 +56,7 @@ discovery.relabel "blackbox" {
 
 // Blackbox
 prometheus.exporter.blackbox "default" {
-  config = "{\"modules\":{\"http_2xx\":{\"prober\":\"http\",\"timeout\":\"5s\",\"http\":{\"valid_http_versions\":[\"HTTP/1.1\",\"HTTP/2\"],\"valid_status_codes\":[200,204,301,302,308],\"follow_redirects\":true,\"preferred_ip_protocol\":\"ip4\"}}}}"
+  config_file  = "{{ ALLOY_DIR }}/blackbox.yml"
 
   targets = discovery.relabel.blackbox.output
 }
