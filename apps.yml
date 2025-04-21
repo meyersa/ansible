@@ -7,6 +7,8 @@
     reboot: true
     STATE: "present"
   roles: 
-    # - configure
-    - deploy/docker_operations
-    - deploy/docker_apps
+    - configure
+    - deploy/storage
+    - deploy/operations
+    - deploy/monitoring
+    - deploy/apps

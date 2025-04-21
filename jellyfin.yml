@@ -1,10 +1,11 @@
 ---
-- name: Jellyfin Install
+- name: Jellyfin
   hosts: jellyfin
   become: true
   vars: 
+    reboot: false
   roles: 
     - update
     - configure
-    - misc/jellyfin
+    # - misc/jellyfin
     - clean
