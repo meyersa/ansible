@@ -183,7 +183,7 @@
           },
           "disableTextWrap": false,
           "editorMode": "code",
-          "expr": "count by(instance) (up{job=\"integrations/unix\"})",
+          "expr": "count (up{job=\"integrations/unix\"})",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "legendFormat": "__auto",
@@ -828,7 +828,7 @@
           "useBackend": false
         }
       ],
-      "title": "Network Ingress",
+      "title": "Network",
       "type": "timeseries"
     },
     {
@@ -1136,7 +1136,7 @@
           "useBackend": false
         }
       ],
-      "title": "Disk IO Read",
+      "title": "Disk IO",
       "type": "timeseries"
     },
     {
@@ -1258,5 +1258,5 @@
   "timezone": "browser",
   "title": "System Stats",
   "uid": "cehtln7abzjeoc",
-  "version": 2
+  "version": 1
 }

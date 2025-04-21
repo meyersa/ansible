@@ -18,7 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 3,
+  "id": 2,
   "links": [],
   "panels": [
     {
@@ -1165,7 +1165,7 @@
             "axisColorMode": "text",
             "axisLabel": "",
             "axisPlacement": "auto",
-            "axisSoftMax": 1,
+            "axisSoftMax": 5,
             "axisSoftMin": 0,
             "barAlignment": 0,
             "barWidthFactor": 0.6,
@@ -1235,8 +1235,8 @@
             "uid": "mimir"
           },
           "disableTextWrap": false,
-          "editorMode": "code",
-          "expr": "sum(rate(mongodb_connections[5m]))",
+          "editorMode": "builder",
+          "expr": "count_over_time(mongodb_connections{state=\"active\"}[$__interval])",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "legendFormat": "__auto",
@@ -1245,7 +1245,7 @@
           "useBackend": false
         }
       ],
-      "title": "MongoDB Connections Rate",
+      "title": "MongoDB Connections",
       "type": "timeseries"
     }
   ],
@@ -1263,5 +1263,5 @@
   "timezone": "browser",
   "title": "Database Stats",
   "uid": "fehtp8m4stvcwc",
-  "version": 2
+  "version": 1
 }
