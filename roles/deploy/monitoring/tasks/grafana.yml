@@ -57,7 +57,8 @@
           GF_FEATURE_TOGGLES_ENABLE: "publicDashboards"
           GF_ANALYTICS_ENABLED: "false"
           GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: "/etc/grafana/provisioning/dashboards/Overview.json"
-          DISCORD_WEBHOOK_URL: "{{ GF_DISCORD_WEBHOOK }}"
+          DISCORD_ALERT_WEBHOOK_URL: "{{ GF_DISCORD_ALERT_WEBHOOK }}"
+          DISCORD_LOGIN_WEBHOOK_URL: "{{ GF_DISCORD_LOGIN_WEBHOOK }}"
         labels:
           traefik.enable: "true"
           traefik.http.routers.grafana.rule: "Host(`{{ GRAFANA_URL }}`)"
