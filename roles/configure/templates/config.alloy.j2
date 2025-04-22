@@ -224,6 +224,10 @@ loki.process "filter" {
     expression          = ".*debug.*"
     drop_counter_reason = "Debug"
   }
+  stage.drop {
+    expression          = ".*Response received from loki.*"
+    drop_counter_reason = "Feedback loop"
+  }
   stage.metrics {
     metric.counter {
       name              = "log_lines_processed"
