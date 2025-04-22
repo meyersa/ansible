@@ -71,6 +71,18 @@
             - "API_KEY: {{ TR_KEY }}"
             - "MONGO_DB: {{ TR_MONGO_DB }}"
             - "MONGO_URL: {{ TR_MONGO_URL }}"
+        - name: api 
+          image: ghcr.io/meyersa/truthradar-api:latest
+          url: "truthradar.{{ FRONTEND_DOMAIN }}"
+          path: "/predict"
+          port: 8000
+          mon_path: "/ping"
+          noindex: true
+          multiplier: 8
+          envs: 
+            - "MODEL_LINK: {{ TR_API_MODEL_LINK }}"
+            - "VECTORIZER_LINK: {{ TR_API_VECTORIZER_LINK }}"
+            - "API_KEY: {{ TR_API_API_KEY }}"
 
   # - name: ShodanETL
   #   include_tasks: roles/util/tasks/deploy_app.yml
