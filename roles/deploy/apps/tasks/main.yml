@@ -76,7 +76,6 @@
           url: "truthradar.{{ FRONTEND_DOMAIN }}"
           path: "/predict"
           port: 8000
-          mon_path: "/ping"
           noindex: true
           multiplier: 8
           envs: 
