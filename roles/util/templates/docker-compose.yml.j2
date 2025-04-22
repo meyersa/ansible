@@ -8,7 +8,11 @@ services:
       image: {{ container.image }}
       container_name: {{ app }}-{{ container.name }}
       restart: unless-stopped
+{% if container.multiplier is defined %}
+      mem_limit: {{ (container.multiplier * 256) ~ 'm' }}
+{% else %}
       mem_limit: 256m
+{% endif %}
       cpus: 0.5
 
       # Networks
@@ -44,9 +48,12 @@ services:
       labels: 
         - "ansible.deploy=true"
 {% if container.url is defined %}
-        - "alloy.blackbox={{ container.url }}{% if container.api is defined %}:8443{% endif %}{% if container.mon_path is defined %}{{ container.mon_path }}{% endif %}"
+        - "alloy.blackbox={{ container.url }}{% if container.api is defined %}:8443{% endif %}{% if container.path is defined %}{{ container.path }}{% endif %}{% if container.mon_path is defined %}{{ container.mon_path }}{% endif %}"
         - "traefik.enable=true"
-        - "traefik.http.routers.{{ app }}-{{ container.name }}.rule=Host(`{{ container.url }}`)"
+        - "traefik.http.routers.{{ app }}-{{ container.name }}.rule=Host(`{{ container.url }}`){% if container.path is defined %} && PathPrefix(`{{ container.path }}`){% endif %}"
+{% if container.path is defined %}
+        - "traefik.http.routers.{{ app }}-{{ container.name }}.priority=100"
+{% endif %}
         - "traefik.http.routers.{{ app }}-{{ container.name }}.entrypoints={{ 'apisecure' if container.api is defined and container.api else 'websecure' }}"
         - "traefik.http.services.{{ app }}-{{ container.name }}.loadbalancer.server.port={{ container.port | default(80) }}"
 {% if (container.noindex is defined and container.noindex) or ENVIRONMENT == "dev" %}
@@ -58,10 +65,16 @@ services:
         {{ label }}
 {% endfor %}
 {% endif %}
+      # Additional
+{% if container.additional is defined %}
+{{ container.additional | indent(6, true) }}
+{% endif %}
 {% endfor %}
 
 networks:
   default:
+  proxy: 
+    external: true
   traefik:
     external: true
   mongodb: 

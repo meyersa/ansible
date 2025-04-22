@@ -15,7 +15,7 @@
         state: present
       when: mongo_user is defined and mongo_pass is defined
         
-    - name: Create {{ app }} data directory
+    - name: Create {{ app }} compose directory
       file:
         path: "{{ APP_PATH }}"
         state: directory
