@@ -46,6 +46,7 @@
         - name: api
           image: observabilitystack/geoip-api:latest
           url: "maxmind.{{ BACKEND_DOMAIN }}"
+          mon_path: "/1.1.1.1"
           port: 8080
           api: true
 
