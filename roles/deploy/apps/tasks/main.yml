@@ -71,6 +71,10 @@
             - "API_KEY: {{ TR_KEY }}"
             - "MONGO_DB: {{ TR_MONGO_DB }}"
             - "MONGO_URL: {{ TR_MONGO_URL }}"
+            - "MODEL_API: {{ TR_MODEL_API }}"
+            # Confusing I know, auth should probably just be passed thru from client
+            - "MODEL_API_KEY: {{ TR_API_KEY }}"
+
         - name: api 
           image: ghcr.io/meyersa/truthradar-api:latest
           url: "truthradar.{{ FRONTEND_DOMAIN }}"
@@ -78,10 +82,9 @@
           port: 8000
           noindex: true
           multiplier: 8
+          api: true
           envs: 
-            - "MODEL_LINK: {{ TR_API_MODEL_LINK }}"
-            - "VECTORIZER_LINK: {{ TR_API_VECTORIZER_LINK }}"
-            - "API_KEY: {{ TR_API_API_KEY }}"
+            - "API_KEY: {{ TR_API_KEY }}"
 
   # - name: ShodanETL
   #   include_tasks: roles/util/tasks/deploy_app.yml
