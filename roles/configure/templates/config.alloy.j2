@@ -217,7 +217,7 @@ loki.process "filter" {
     drop_counter_reason = "Monitoring Host"
   }
   stage.drop {
-    expression          = ".*could not set up a wait request to the Docker client|could not acquire work|context canceled.*"
+    expression          = ".*could not set up a wait request to the Docker client|could not acquire work|context canceled|negative structured metadata.*"
     drop_counter_reason = "Spammy Log"
   }
   stage.drop {
