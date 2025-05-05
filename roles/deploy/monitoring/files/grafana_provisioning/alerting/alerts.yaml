@@ -913,7 +913,7 @@ groups:
               datasourceUid: mimir
               model:
                 editorMode: code
-                expr: changes(loki_process_custom_ssh_success[5m])
+                expr: increase(loki_process_custom_ssh_success[5m])
                 instant: true
                 intervalMs: 1000
                 legendFormat: __auto
