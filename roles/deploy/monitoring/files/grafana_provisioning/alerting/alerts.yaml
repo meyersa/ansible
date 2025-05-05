@@ -391,16 +391,20 @@ groups:
                 direction: backward
                 editorMode: code
                 expr: |
-                    100 *
-                    (
-                      sum by(container_name) (
-                        rate({job="docker"} |~ "critical|err|severe|panic" [1h])
-                      )
-                      /
-                      sum by(container_name) (
-                        rate({job="docker"} [1h])
-                      )
+                  100 *
+                  (
+                    sum by(container_name) (
+                      rate({job="docker"} |~ "critical|err|severe|panic" [1h])
                     )
+                    /
+                    sum by(container_name) (
+                      rate({job="docker"} [1h])
+                    )
+                  )
+                  > 5 and
+                    sum by(container_name) (
+                      rate({job="docker"} [1h])
+                    ) > 0.1
                 instant: true
                 intervalMs: 1000
                 legendFormat: '{{container_name}}'
